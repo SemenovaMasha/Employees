@@ -5,11 +5,17 @@
 
 <div id="Positions">
     @*<Positions></Positions>*@
-    <list></list>
+    <list  :filtered="filtered"></list>
 </div>
 
 @section Scripts{
     <script type="module" src="~/vue/positions/index.js"></script>
 
-    
+    @*<b-table striped show-empty :items="filtered">
+        <template slot="top-row" slot-scope="{ fields }">
+            <td v-for="field in fields" :key="field.key">
+                <input v-model="filters[field.key]" :placeholder="field.label">
+            </td>
+        </template>
+    </b-table>*@
 }
