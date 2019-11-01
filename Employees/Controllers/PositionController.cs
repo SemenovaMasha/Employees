@@ -27,5 +27,33 @@ namespace Employees.Controllers
         {
             return _context.Positions.ToList();
         }
+
+        [HttpPost]
+        public Position Add([FromBody]Position position)
+        {
+            position.Id = 0;
+            _context.Positions.Add(position);
+            _context.SaveChanges();
+            return position;
+        }
+
+        public Position Delete(long id)
+        {
+            Position deleted = _context.Positions.FirstOrDefault(x => x.Id == id);
+            if (deleted == null)
+                return null;
+
+            _context.Positions.Remove(deleted);
+            _context.SaveChanges();
+            return deleted;
+        }
+
+        [HttpPost]
+        public Position Update([FromBody]Position position)
+        {
+            _context.Positions.Update(position);
+            _context.SaveChanges();
+            return position;
+        }
     }
 }
