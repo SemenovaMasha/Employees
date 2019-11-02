@@ -14,6 +14,7 @@ using Employees.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Employees.Models;
+using Employees.Services;
 
 namespace Employees
 {
@@ -52,6 +53,7 @@ namespace Employees
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddScoped<EmployeeUsersService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

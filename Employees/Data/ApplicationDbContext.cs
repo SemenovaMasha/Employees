@@ -16,6 +16,7 @@ namespace Employees.Data
         {
         }
     }
+
     public static class MyIdentityDataInitializer
     {
         public static void SeedData(UserManager<EmployeeUser> userManager, RoleManager<IdentityRole> roleManager)
@@ -37,31 +38,33 @@ namespace Employees.Data
 
                 if (result.Succeeded)
                 {
-                    userManager.AddToRoleAsync(user,"Admin").Wait();
+                    userManager.AddToRoleAsync(user, RolesNames.Admin).Wait();
                 }
+            }
+            if (userManager.FindByNameAsync("user").Result == null)
+            {
+                EmployeeUser user = new EmployeeUser();
+                user.UserName = "user";
+                user.Email = "user@mail.ru";
+                user.FIO = "user";
+
+                IdentityResult result = userManager.CreateAsync(user, "user").Result;
             }
         }
 
         public static void SeedRoles(RoleManager<IdentityRole> roleManager)
         {
-            if (!roleManager.RoleExistsAsync("Employee").Result)
+            if (!roleManager.RoleExistsAsync(RolesNames.Admin).Result)
             {
                 IdentityRole role = new IdentityRole();
-                role.Name = "Employee";
+                role.Name = RolesNames.Admin;
                 IdentityResult roleResult = roleManager.CreateAsync(role).Result;
             }
 
-            if (!roleManager.RoleExistsAsync("Admin").Result)
+            if (!roleManager.RoleExistsAsync(RolesNames.Manager).Result)
             {
                 IdentityRole role = new IdentityRole();
-                role.Name = "Admin";
-                IdentityResult roleResult = roleManager.CreateAsync(role).Result;
-            }
-
-            if (!roleManager.RoleExistsAsync("Manager").Result)
-            {
-                IdentityRole role = new IdentityRole();
-                role.Name = "Manager";
+                role.Name = RolesNames.Manager;
                 IdentityResult roleResult = roleManager.CreateAsync(role).Result;
             }
         }
