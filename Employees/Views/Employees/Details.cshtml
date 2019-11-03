@@ -1,0 +1,12 @@
+﻿@model string
+@{
+    ViewData["Title"] = "Сотрудник";
+}
+
+<div id="Employee">
+    <EmployeeDetails employeeid="@Model"></EmployeeDetails>
+</div>
+
+@section Scripts{
+    <script type="text/javascript" src="~/vue/employees/details.js"></script>
+}   

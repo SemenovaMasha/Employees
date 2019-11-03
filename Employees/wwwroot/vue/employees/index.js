@@ -12,7 +12,7 @@ new Vue({
       </template>
 
       <template v-slot:cell(fio)="props">    
-       <a href="#">{{props.item.fio}} </a>
+       <a :href="'/employees/details?id='+props.item.id">{{props.item.fio}} </a>
       </template>
       
       <template v-slot:top-row="props">
@@ -59,16 +59,17 @@ new Vue({
                     sortable: true,
                     width: 14
                 },
-                {
-                    key: 'birthDate',
-                    label: 'Дата рождения',
-                    sortable: true,
-                    width: 4,
-                    formatter: (value, key, item) => {
-                        var date = new Date(value);
-                        return ('0' + date.getDate()).slice(-2) + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-'+ ('000' + (date.getFullYear())).slice(-4) 
-                    }
-                },
+                //{
+                //    key: 'birthDate',
+                //    label: 'Дата рождения',
+                //    sortable: false,
+                //    width: 4,
+                //    formatter: (value, key, item) => {
+                //        if (!value) return '';
+                //        var date = new Date(value);
+                //        return ('0' + date.getDate()).slice(-2) + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-'+ ('000' + (date.getFullYear())).slice(-4) 
+                //    }
+                //},
                 {
                     key: 'position',
                     label: 'Должность',
@@ -80,6 +81,12 @@ new Vue({
                     label: 'Роль',
                     sortable: true,
                     width: 4
+                },
+                {
+                    key: 'salary',
+                    label: 'Оклад',
+                    sortable: true,
+                    width: 3
                 },
                 {
                     key: 'education',
@@ -125,7 +132,7 @@ new Vue({
             .then(response => {
                 this.readonly = response.data
                 if(this.readonly)
-                    this.fields=this.fields.filter(item => { return item.key != 'actions' });
+                    this.fields = this.fields.filter(item => { return item.key != 'actions' && item.key != 'salary' });
             })
     },
     methods: {

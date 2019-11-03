@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Employees.Models.Dto;
 using Employees.Services;
@@ -17,6 +18,14 @@ namespace Employees.Controllers
         private EmployeeUsersService _employeeUsersService;
         private UserManager<EmployeeUser> _userManager;
 
+        private EmployeeUser CurrentUser
+        {
+            get
+            {
+                return _userManager.GetUserAsync(HttpContext.User).Result;
+            }
+        }
+
         public EmployeesController(EmployeeUsersService _employeeUsersService, UserManager<EmployeeUser> _userManager)
         {
             this._employeeUsersService = _employeeUsersService;
@@ -29,9 +38,26 @@ namespace Employees.Controllers
             return View();
         }
 
+        [Authorize]
+        public ActionResult Details(string id)
+        {
+            return View("Details", id);
+        }
+
+        [Authorize]
+        public ActionResult Edit(string id)
+        {
+            return View("Edit", id);
+        }
+
         public List<EmployeeUserDto> GetAll()
         {
             return _employeeUsersService.GetAll();
+        }
+
+        public EmployeeUserDto Get(string id)
+        {
+            return _employeeUsersService.Get(id);
         }
 
         [HttpPost]
@@ -53,8 +79,12 @@ namespace Employees.Controllers
 
         public bool ListReadonly()
         {
-            var user = _userManager.GetUserAsync(HttpContext.User).Result;
-            return !_userManager.IsInRoleAsync(user, RolesNames.Admin).Result;
+            return !_userManager.IsInRoleAsync(CurrentUser, RolesNames.Admin).Result;
+        }
+
+        public bool CanEditUser(string id)
+        {
+            return CurrentUser.Id==id || _userManager.IsInRoleAsync(CurrentUser, RolesNames.Admin).Result;
         }
     }
 }

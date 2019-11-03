@@ -10,7 +10,7 @@ namespace Employees.Models.Dto
     {
         public string Id { get; set; }
         public string FIO { get; set; }
-        public DateTime BirthDate { get; set; }
+        public DateTime? BirthDate { get; set; }
         public string PassportSeriesNumber { get; set; }
         public string PassportGiven { get; set; }
         public string Address { get; set; }
@@ -18,8 +18,8 @@ namespace Employees.Models.Dto
         public string Position { get; set; }
         public long? PositionId { get; set; }
         public string AdditionalInfo { get; set; }
-        public long RoleId { get; set; }
         public string Role { get; set; }
-
+        public string RoleLocal { get; set; }
+        public decimal Salary { get; set; }
     }
 }

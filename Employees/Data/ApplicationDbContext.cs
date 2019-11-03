@@ -49,6 +49,11 @@ namespace Employees.Data
                 user.FIO = "user";
 
                 IdentityResult result = userManager.CreateAsync(user, "user").Result;
+
+                if (result.Succeeded)
+                {
+                    userManager.AddToRoleAsync(user, RolesNames.Employee).Wait();
+                }
             }
         }
 
@@ -65,6 +70,13 @@ namespace Employees.Data
             {
                 IdentityRole role = new IdentityRole();
                 role.Name = RolesNames.Manager;
+                IdentityResult roleResult = roleManager.CreateAsync(role).Result;
+            }
+
+            if (!roleManager.RoleExistsAsync(RolesNames.Employee).Result)
+            {
+                IdentityRole role = new IdentityRole();
+                role.Name = RolesNames.Employee;
                 IdentityResult roleResult = roleManager.CreateAsync(role).Result;
             }
         }

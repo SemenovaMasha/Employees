@@ -3,7 +3,7 @@ export default Vue.component('positionDetails', {
     <div>
       <b-form @submit="onSubmit" @reset="onReset" class="col-sm-6 ">
         <div class="form-group row ">
-          <label for="positionName" class="col-sm-4 col-form-label">Наименование</label>
+          <label for="positionName" class="col-sm-4 col-form-label required">Наименование</label>
           <b-form-input class="col-sm-8"
             id="positionName"
             v-model="currentItem.name"

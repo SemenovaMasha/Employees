@@ -17,7 +17,7 @@ namespace Employees.Controllers
             this._context = _context;
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = RolesNames.Admin)]
         public ActionResult Index()
         {
             return View();

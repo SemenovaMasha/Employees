@@ -3,27 +3,16 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Employees</title>
+    <title>@ViewData["Title"]</title>
 
     <environment include="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
     </environment>
-    @*<environment exclude="Development">
-            <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-                  asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
-                  asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute"
-                  crossorigin="anonymous"
-                  integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" />
-        </environment>*@
     <link rel="stylesheet" href="~/css/site.css" />
     <link rel="stylesheet" href="~/css/fontawesome/css/all.min.css" />
-    <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/minty/bootstrap.min.css" rel="stylesheet"
-          asp-fallback-href="~/lib/bootstrap/dist/css/minty/bootstrap.min.css" asp-suppress-fallback-integrity="true"
-          asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute"
-          integrity="sha384-9NlqO4dP5KfioUGS568UFwM3lbWf3Uj3Qb7FBHuIuhLoDp3ZgAqPE1/MYLEBPZYM"
-          crossorigin="anonymous">
-
-    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css" />
+    <link href="~/css/minty.css" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="~/css/bootstrap-vue.css" />
+    <link rel="stylesheet" href="~/css/vue-select.css" />
 
 
 </head>
@@ -50,7 +39,7 @@
             </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="container" style="margin-bottom: 60px">
         <partial name="_CookieConsentPartial" />
         <main role="main" class="pb-3">
             @RenderBody()
@@ -84,9 +73,12 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-    <script src="https://unpkg.com/vuex"></script>
-    <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="~/js/vuex.js"></script>
+    <script src="~/js/bootstrap-vue.js"></script>
+    <script src="~/js/axios.js"></script>
+    <script src="~/js/vue2-datepicker.js"></script>
+    <script src="~/js/vue-select.js"></script>
+
 
     @RenderSection("Scripts", required: false)
 </body>

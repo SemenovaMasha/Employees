@@ -9,7 +9,7 @@ namespace Employees.Models
     public class EmployeeUser : IdentityUser
     {
         public string FIO { get; set; }
-        public DateTime BirthDate { get; set; }
+        public DateTime? BirthDate { get; set; }
         public string PassportSeriesNumber { get; set; }
         public string PassportGiven { get; set; }
         public string Address { get; set; }
@@ -17,11 +17,13 @@ namespace Employees.Models
         public Position Position { get; set; }
         public long? PositionId { get; set; }
         public string AdditionalInfo { get; set; }
+        public decimal Salary { get; set; }
     }
 
     public static class RolesNames
     {
-        public static string Admin = "Admin";
-        public static string Manager = "Manager";
+        public const string Admin = "Администратор";
+        public const string Manager = "Менеджер";
+        public const string Employee = "Сотрудник";
     }
 }

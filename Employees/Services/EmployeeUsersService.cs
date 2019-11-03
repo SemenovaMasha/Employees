@@ -27,7 +27,7 @@ namespace Employees.Services
             if (user == null)
             {
                 user = new EmployeeUser();
-                user.Id = Guid.NewGuid().ToString();
+                //user.Id = Guid.NewGuid().ToString();
             }
 
             user.FIO = dto.FIO;
@@ -38,6 +38,7 @@ namespace Employees.Services
             user.Education = dto.Education;
             user.PassportGiven = dto.PassportGiven;
             user.PassportSeriesNumber = dto.PassportSeriesNumber;
+            user.Salary = dto.Salary;
 
             return user;
         }
@@ -57,6 +58,7 @@ namespace Employees.Services
                 PassportGiven = model.PassportGiven,
                 PassportSeriesNumber = model.PassportSeriesNumber,
                 Role = _userManager.GetRolesAsync(model).Result.FirstOrDefault(),
+                Salary = model.Salary,
             };
         }
 
@@ -68,8 +70,9 @@ namespace Employees.Services
         public EmployeeUserDto Add(EmployeeUserDto dto)
         {
             EmployeeUser user = Map(dto);
-            _context.Users.Add(user);
-            _userManager.AddToRoleAsync(user, dto.Role);
+            user.UserName = user.FIO;
+            var res = _userManager.CreateAsync(user, user.FIO).Result;
+            res = _userManager.AddToRoleAsync(user, dto.Role).Result;
             _context.SaveChanges();
             return Map(user);
         }
@@ -87,11 +90,36 @@ namespace Employees.Services
             EmployeeUser user = Map(dto);
             _context.Users.Update(user);
 
-            _userManager.RemoveFromRolesAsync(user, _userManager.GetRolesAsync(user).Result);
-            _userManager.AddToRoleAsync(user, dto.Role);
+            var res = _userManager.RemoveFromRolesAsync(user, _userManager.GetRolesAsync(user).Result).Result;
+            res = _userManager.AddToRoleAsync(user, dto.Role).Result;
 
             _context.SaveChanges();
             return Map(user);
+        }
+
+        public EmployeeUserDto Get(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return new EmployeeUserDto()
+                {
+                    Id = "",
+                    PositionId = null,
+                    FIO = "",
+                    Education = "",
+                    BirthDate = null,
+                    PassportGiven = "",
+                    PassportSeriesNumber = "",
+                    AdditionalInfo = "",
+                    Address = "",
+                    Role = RolesNames.Employee,
+                    Salary = 0,
+                };
+            }
+            else
+            {
+                return Map(_context.Users.Include(x=>x.Position).FirstOrDefault(x => x.Id == id));
+            }
         }
 
     }

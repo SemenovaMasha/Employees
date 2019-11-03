@@ -4,14 +4,16 @@ using Employees.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Employees.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20191103071719_nullable birthdate")]
+    partial class nullablebirthdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -65,8 +67,6 @@ namespace Employees.Data.Migrations
                     b.Property<bool>("PhoneNumberConfirmed");
 
                     b.Property<long?>("PositionId");
-
-                    b.Property<decimal>("Salary");
 
                     b.Property<string>("SecurityStamp");
 

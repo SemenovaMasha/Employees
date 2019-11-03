@@ -42,12 +42,13 @@ namespace Employees
                     Configuration.GetConnectionString("DefaultConnection")));
             services.AddIdentity<EmployeeUser, IdentityRole>(options =>
             {
-                options.User.RequireUniqueEmail = true;
+                options.User.RequireUniqueEmail = false;
                 options.Password.RequiredLength = 1;
                 options.Password.RequireLowercase = false;
                 options.Password.RequireUppercase = false;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireDigit = false;
+                options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+ ,:абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
             })
                 .AddDefaultUI(UIFramework.Bootstrap4)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
