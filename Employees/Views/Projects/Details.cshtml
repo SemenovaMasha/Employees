@@ -1,0 +1,14 @@
+﻿@model long
+@{
+    ViewData["Title"] = "Проект";
+}
+
+<div id="Project">
+    <projectdetails projectid="@Model"></projectdetails>
+    <project-team projectid="@Model"></project-team>
+</div>
+
+@section Scripts{
+    <script type="text/javascript" src="~/vue/projects/projectTeam.js"></script>
+    <script type="text/javascript" src="~/vue/projects/details.js"></script>
+}

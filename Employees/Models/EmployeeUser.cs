@@ -18,6 +18,7 @@ namespace Employees.Models
         public long? PositionId { get; set; }
         public string AdditionalInfo { get; set; }
         public decimal Salary { get; set; }
+        public List<ProjectUser> ProjectUsers { get; set; }
     }
 
     public static class RolesNames

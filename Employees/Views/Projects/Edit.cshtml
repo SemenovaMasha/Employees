@@ -1,0 +1,13 @@
+﻿@model long
+@{
+    ViewData["Title"] = "Проект";
+}
+
+
+<div id="Project">
+    <ProjectEdit projectid="@Model"></ProjectEdit>
+</div>
+
+@section Scripts{
+    <script type="text/javascript" src="~/vue/projects/edit.js"></script>
+}   

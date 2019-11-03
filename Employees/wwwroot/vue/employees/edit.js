@@ -14,7 +14,7 @@
           ></b-form-input>     
         </div>
         <div class="form-group row ">
-          <label for="positionMinSalary" class="col-sm-4 col-form-label required">Дата рождения</label>
+          <label for="birthDate" class="col-sm-4 col-form-label required">Дата рождения</label>
          <date-picker name="birthDate" v-model="currentItem.birthDate" lang="ru" format="DD.MM.YYYY" class="col-sm-8" placeholder=" "
                                     style="padding-left:0px;padding-right:0px;"></date-picker>
 
@@ -192,9 +192,9 @@
                 window.document.title = this.currentItem.fio || "Новый сотрудник"
             })
 
-        axios.get("/employees/ListReadonly")
+        axios.get("/employees/isAdmin")
             .then(response => {
-                this.isAdmin = !response.data
+                this.isAdmin = response.data
             })
     },
     components: {
@@ -204,3 +204,4 @@
 new Vue({
     el: '#Employee',
 })
+

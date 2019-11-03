@@ -1,10 +1,10 @@
 ﻿
 new Vue({
-    el: '#Employees',
+    el: '#Projects',
     template: `
     <div>
-       <div style="margin-bottom: 10px"  v-if="isAdmin">       
-        <b-button  @click="addEmployee()"  variant="success" >
+       <div style="margin-bottom: 10px" v-if="isAdmin">       
+        <b-button  @click="addProject()"  variant="success" >
           <i class="fas fa-plus"> Добавить</i>
         </b-button>
         </div>
@@ -13,13 +13,13 @@ new Vue({
     <b-table striped show-empty :items="filtered"  :fields="fields">
 
       <template v-slot:cell(actions)="props">    
-        <b-button size="sm"  @click="deleteEmployee(props.item, props.index, $event.target)" class="mr-2"  variant="outline-danger" >
+        <b-button size="sm"  @click="deleteProject(props.item, props.index, $event.target)" class="mr-2"  variant="outline-danger" >
           <i class="fas fa-trash-alt"></i>
         </b-button>
       </template>
 
-      <template v-slot:cell(fio)="props">    
-       <a :href="'/employees/details?id='+props.item.id">{{props.item.fio}} </a>
+      <template v-slot:cell(name)="props">    
+       <a :href="'/projects/details?id='+props.item.id">{{props.item.name}} </a>
       </template>
       
       <template v-slot:top-row="props">
@@ -41,7 +41,7 @@ new Vue({
 
     <b-modal
       id="delete-modal"     
-      title="Удаление сотрудника"
+      title="Удаление проекта"
       @ok="deleteConfirm"
     >
       <template v-slot:modal-ok="props">
@@ -61,32 +61,20 @@ new Vue({
             isAdmin: false,
             fields: [
                 {
-                    key: 'fio',
-                    label: 'ФИО',
+                    key: 'name',
+                    label: 'Название',
                     sortable: true,
-                    width: 14
+                    width: 6
                 },
                 {
-                    key: 'position',
-                    label: 'Должность',
-                    sortable: true,
-                    width: 4
-                },
-                {
-                    key: 'role',
-                    label: 'Роль',
+                    key: 'description',
+                    label: 'Описание',
                     sortable: true,
                     width: 4
                 },
                 {
-                    key: 'salary',
-                    label: 'Оклад',
-                    sortable: true,
-                    width: 3
-                },
-                {
-                    key: 'education',
-                    label: 'Образование',
+                    key: 'manager',
+                    label: 'Менеджер',
                     sortable: true,
                     width: 4
                 },
@@ -97,20 +85,18 @@ new Vue({
                     tdClass: 't',
                 }
             ],
-            allEmployees: [],
+            allProjects: [],
             filters: {
-                fio: '',
-                position: '',
-                role: '',
-                passportSeriesNumber: '',
-                education: '',
+                name: '',
+                description: '',
+                manager: '',
             },
             deletedId: ''
         }
     },
     computed: {
         filtered() {
-            const filtered = this.allEmployees.filter(item => {
+            const filtered = this.allProjects.filter(item => {
                 return Object.keys(this.filters).every(key =>
                     String(item[key]).includes(this.filters[key]))
             })
@@ -119,9 +105,9 @@ new Vue({
     },
 
     mounted() {
-        axios.get("/employees/GetAll")
+        axios.get("/projects/GetAll")
             .then(response => {
-                this.allEmployees = response.data
+                this.allProjects = response.data
             })
 
         axios.get("/employees/isAdmin")
@@ -132,23 +118,23 @@ new Vue({
             })
     },
     methods: {
-        deleteEmployee(item) {
+        deleteProject(item) {
             this.deletedId = item.id
             this.$bvModal.show('delete-modal')
         },
         deleteConfirm(bvModalEvt) {
-            axios.get("/employees/delete", {
+            axios.get("/projects/delete", {
                     params: {
                         id: this.deletedId
                     }
                 })
                 .then(response => {
-                    this.allEmployees = this.allEmployees.filter(item => { return item.id != response.data.id });
+                    this.allProjects = this.allProjects.filter(item => { return item.id != response.data.id });
                 })
 
         },
-        addEmployee() {
-            document.location.href = '/employees/edit?id=' 
+        addProject() {
+            document.location.href = '/projects/edit?id=-1' 
         },
     }
 })

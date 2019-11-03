@@ -11,6 +11,9 @@ namespace Employees.Data
     public class ApplicationDbContext : IdentityDbContext<EmployeeUser>
     {
         public DbSet<Position> Positions { get; set; }
+        public DbSet<Project> Projects { get; set; }
+        public DbSet<ProjectUser> ProjectUsers { get; set; }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {

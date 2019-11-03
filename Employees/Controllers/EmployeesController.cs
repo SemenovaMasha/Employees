@@ -55,6 +55,11 @@ namespace Employees.Controllers
             return _employeeUsersService.GetAll();
         }
 
+        public List<EmployeeUserDto> GetAllManagers()
+        {
+            return _employeeUsersService.GetAllManagers();
+        }
+
         public EmployeeUserDto Get(string id)
         {
             return _employeeUsersService.Get(id);
@@ -77,9 +82,9 @@ namespace Employees.Controllers
             return _employeeUsersService.Update(dto);
         }
 
-        public bool ListReadonly()
+        public bool IsAdmin()
         {
-            return !_userManager.IsInRoleAsync(CurrentUser, RolesNames.Admin).Result;
+            return _userManager.IsInRoleAsync(CurrentUser, RolesNames.Admin).Result;
         }
 
         public bool CanEditUser(string id)

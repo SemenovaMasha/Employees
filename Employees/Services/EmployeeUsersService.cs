@@ -64,9 +64,16 @@ namespace Employees.Services
 
         public List<EmployeeUserDto> GetAll()
         {
-            return _context.Users.Include(x=>x.Position).ToList().Select(x => Map(x)).ToList();
+            return _context.Users.Include(x => x.Position).ToList().Select(x => Map(x)).ToList();
         }
-        
+
+        public List<EmployeeUserDto> GetAllManagers()
+        {
+            return (_userManager.GetUsersInRoleAsync(RolesNames.Admin).Result.ToList()
+                    .Union(_userManager.GetUsersInRoleAsync(RolesNames.Manager).Result.ToList())).Select(x => Map(x))
+                .ToList();
+        }
+
         public EmployeeUserDto Add(EmployeeUserDto dto)
         {
             EmployeeUser user = Map(dto);
@@ -121,6 +128,7 @@ namespace Employees.Services
                 return Map(_context.Users.Include(x=>x.Position).FirstOrDefault(x => x.Id == id));
             }
         }
+        
 
     }
 }
