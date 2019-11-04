@@ -64,7 +64,7 @@
 
         <div class="form-group row " v-if="isAdmin">
           <label for="position" class="col-sm-4 col-form-label required">Должность</label>         
-            <v-select placeholder=" " v-model="currentItem.position" as="name::id" :from="allPositions" tagging  class="col-sm-8"></v-select>
+            <v-select  placeholder=" " v-model="currentItem.position" as="name::id" :from="allPositions" tagging  class="col-sm-8"></v-select>
   
         <div class="invalid-feedback col-sm-8 offset-sm-4"" style="display:block" v-if="!this.currentItem.position || (this.currentItem.position.name == ' ')">Выберите должность</div>
         </div>

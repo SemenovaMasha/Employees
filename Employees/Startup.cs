@@ -56,6 +56,7 @@ namespace Employees
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddScoped<EmployeeUsersService>();
             services.AddScoped<ProjectService>();
+            services.AddScoped<LaborsService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

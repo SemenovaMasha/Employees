@@ -87,6 +87,11 @@ namespace Employees.Controllers
             return _userManager.IsInRoleAsync(CurrentUser, RolesNames.Admin).Result;
         }
 
+        public bool IsManager()
+        {
+            return _userManager.IsInRoleAsync(CurrentUser, RolesNames.Manager).Result|| _userManager.IsInRoleAsync(CurrentUser, RolesNames.Admin).Result;
+        }
+
         public bool CanEditUser(string id)
         {
             return CurrentUser.Id==id || _userManager.IsInRoleAsync(CurrentUser, RolesNames.Admin).Result;

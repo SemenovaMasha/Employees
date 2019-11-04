@@ -53,7 +53,7 @@ namespace Employees.Services
 
         public List<ProjectDto> GetAllByUser(string id)
         {
-            return _context.Projects.Include(x => x.ProjectUsers)
+            return _context.Projects.Include(x => x.Manager).Include(x => x.ProjectUsers)
                 .Where(x=>x.ProjectUsers.Any(p=>p.UserId==id))
                 .ToList().Select(x => Map(x)).ToList();
         }
@@ -145,6 +145,11 @@ namespace Employees.Services
 
         public List<EmployeeUserDto> GetProjectUsers(long id)
         {
+            if (id==-1 || id==0)
+            {
+                return _context.Users.ToList().Select(x => _employeeUsersService.Map(x)).ToList();
+            }
+
             var project = _context.Projects.Where(x => x.Id == id).Include(x => x.ProjectUsers)
                 .ThenInclude(p => p.User).ThenInclude(x => x.Position).FirstOrDefault();
 
