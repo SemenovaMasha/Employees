@@ -85,7 +85,7 @@
           {
             key: 'actions',
             label: '',
-            width: 1
+            width: 2
           }
         ],
         allBonuses: [],
