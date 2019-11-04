@@ -69,3 +69,7 @@ label.required:after {
 .container .v-select:not(.-multiple):not(.-searching).-focused .v-select-selected, .v-select:not(.-multiple):not(.-searching).-opened .v-select-selected {
     opacity: 1;
 }
+
+tr .custom-checkbox {
+    text-align: center;
+}

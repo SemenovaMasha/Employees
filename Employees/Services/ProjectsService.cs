@@ -51,6 +51,13 @@ namespace Employees.Services
             };
         }
 
+        public List<ProjectDto> GetAllByUser(string id)
+        {
+            return _context.Projects.Include(x => x.ProjectUsers)
+                .Where(x=>x.ProjectUsers.Any(p=>p.UserId==id))
+                .ToList().Select(x => Map(x)).ToList();
+        }
+
         public List<ProjectDto> GetAll()
         {
             return _context.Projects.Include(x=>x.Manager).ToList().Select(x => Map(x)).ToList();
@@ -60,6 +67,11 @@ namespace Employees.Services
         {
             Project project = Map(dto);
             _context.Projects.Add(project);
+            _context.ProjectUsers.Add(new ProjectUser()
+            {
+                ProjectId = project.Id,
+                UserId = project.ManagerId
+            });
             _context.SaveChanges();
             return Map(project);
         }
@@ -76,6 +88,16 @@ namespace Employees.Services
         {
             Project project = Map(dto);
             _context.Projects.Update(project);
+
+            if (!_context.ProjectUsers.Any(x => x.ProjectId == project.Id && x.UserId == project.ManagerId))
+            {
+                _context.ProjectUsers.Add(new ProjectUser()
+                {
+                    ProjectId = project.Id,
+                    UserId = project.ManagerId
+                });
+            }
+
             _context.SaveChanges();
             return Map(project);
         }
@@ -99,6 +121,20 @@ namespace Employees.Services
             }
         }
 
+        public void AddUsersToProject(long projectId, List<string> userIds)
+        {
+            foreach (string userId in userIds)
+            {
+                _context.ProjectUsers.Add(new ProjectUser()
+                {
+                    ProjectId = projectId,
+                    UserId = userId,
+                });
+            }
+
+            _context.SaveChanges();
+        }
+
         public bool CanEditProject(long projectId, List<string> currentUserRoles, string currentUserId)
         {
             var project = _context.Projects.FirstOrDefault(x => x.Id == projectId);
@@ -109,8 +145,33 @@ namespace Employees.Services
 
         public List<EmployeeUserDto> GetProjectUsers(long id)
         {
-            return _context.Projects.Where(x => x.Id == id).Include(x => x.ProjectUsers)
-                .ThenInclude(p => p.User).FirstOrDefault().ProjectUsers.Select(x => _employeeUsersService.Map(x.User)).ToList();
+            var project = _context.Projects.Where(x => x.Id == id).Include(x => x.ProjectUsers)
+                .ThenInclude(p => p.User).ThenInclude(x => x.Position).FirstOrDefault();
+
+            return project.ProjectUsers.Select(x =>
+            {
+                var u = _employeeUsersService.Map(x.User);
+                if (u.Id == project.ManagerId)
+                    u.IsProjectManager = true;
+                return u;
+            }).ToList();
         }
+
+        public void RemoveFromProject(string employeeId, long projectId)
+        {
+            _context.ProjectUsers.RemoveRange(_context.ProjectUsers.Where(x=>x.ProjectId==projectId && x.UserId == employeeId));
+            _context.SaveChanges();
+        }
+        
+        public List<EmployeeUserDto> GetUsersToChoose(long id)
+        {
+            return _context.Users.Include(x => x.ProjectUsers)
+                .Include(x=>x.Position)
+                .Where(x => !x.ProjectUsers.Any(p => p.ProjectId == id))
+                .ToList()
+                .Select(x => _employeeUsersService.Map(x))
+                .ToList();
+        }
+
     }
 }

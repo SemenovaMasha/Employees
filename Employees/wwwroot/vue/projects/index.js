@@ -3,10 +3,17 @@ new Vue({
     el: '#Projects',
     template: `
     <div>
-       <div style="margin-bottom: 10px" v-if="isAdmin">       
-        <b-button  @click="addProject()"  variant="success" >
-          <i class="fas fa-plus"> Добавить</i>
-        </b-button>
+       <div style="margin-bottom: 10px" > 
+            <div class="form-group row ">
+                <b-button  @click="addProject()"  variant="success" class="col-sm-2" v-if="isAdmin">
+                  <i class="fas fa-plus"> Добавить</i>
+                </b-button>
+
+                <b-form-radio-group  v-model="allProjectsRadio" name="radioAllProjects" @change="changeAllProjects"  class="col-sm-4 offset-sm-1" style="padding-top: 7px;">
+                    <b-form-radio value="mine">Мои проекты</b-form-radio>
+                    <b-form-radio value="all">Все проекты</b-form-radio>
+              </b-form-radio-group>
+            </div>
         </div>
 
 
@@ -58,6 +65,7 @@ new Vue({
     `,
     data: function () {
         return {
+            allProjectsRadio: 'mine',
             isAdmin: false,
             fields: [
                 {
@@ -98,17 +106,29 @@ new Vue({
         filtered() {
             const filtered = this.allProjects.filter(item => {
                 return Object.keys(this.filters).every(key =>
-                    String(item[key]).includes(this.filters[key]))
+                    String(item[key]).toLowerCase().includes(this.filters[key].toLowerCase()))
             })
             return filtered.length > 0 ? filtered : []
         }
     },
 
     mounted() {
-        axios.get("/projects/GetAll")
-            .then(response => {
-                this.allProjects = response.data
-            })
+        //axios.get("/projects/GetAll")
+        //    .then(response => {
+        //        this.allProjects = response.data
+        //    })
+
+        if (this.allProjectsRadio == 'mine') {
+            axios.get("/projects/GetAllMine")
+                .then(response => {
+                    this.allProjects = response.data
+                })
+        } else {
+            axios.get("/projects/GetAll")
+                .then(response => {
+                    this.allProjects = response.data
+                })
+        }
 
         axios.get("/employees/isAdmin")
             .then(response => {
@@ -118,6 +138,19 @@ new Vue({
             })
     },
     methods: {
+        changeAllProjects(value) {
+            if (value == 'mine') {
+                axios.get("/projects/GetAllMine")
+                    .then(response => {
+                        this.allProjects = response.data
+                    })
+            } else {
+            axios.get("/projects/GetAll")
+                .then(response => {
+                    this.allProjects = response.data
+                })
+            }
+        },
         deleteProject(item) {
             this.deletedId = item.id
             this.$bvModal.show('delete-modal')

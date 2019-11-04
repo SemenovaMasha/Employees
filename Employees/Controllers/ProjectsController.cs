@@ -53,6 +53,11 @@ namespace Employees.Controllers
             return _projectService.GetAll();
         }
 
+        public List<ProjectDto> GetAllMine()
+        {
+            return _projectService.GetAllByUser(CurrentUser.Id);
+        }
+
         public ProjectDto Get(long id)
         {
             return _projectService.Get(id);
@@ -88,6 +93,22 @@ namespace Employees.Controllers
         public List<EmployeeUserDto> GetProjectUsers(long id)
         {
             return _projectService.GetProjectUsers(id);
+        }
+
+        public List<EmployeeUserDto> GetUsersToChoose(long id)
+        {
+            return _projectService.GetUsersToChoose(id);
+        }
+
+        public void RemoveFromProject(string employeeId, long projectId)
+        {
+            _projectService.RemoveFromProject(employeeId,projectId);
+        }
+        
+        [HttpPost]
+        public void AddUsersToProject(long projectId, [FromBody]List<string> userIds)
+        {
+            _projectService.AddUsersToProject(projectId, userIds);
         }
     }
 }

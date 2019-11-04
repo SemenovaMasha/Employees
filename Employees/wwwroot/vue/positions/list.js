@@ -86,8 +86,8 @@
     computed: {
       filtered () {
         const filtered = this.allPositions.filter(item => {
-          return Object.keys(this.filters).every(key =>
-            String(item[key]).includes(this.filters[key]))
+            return Object.keys(this.filters).every(key =>
+                String(item[key]).toLowerCase().includes(this.filters[key].toLowerCase()))
         })
         return filtered.length > 0 ? filtered : []
       }
