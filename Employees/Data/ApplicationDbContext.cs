@@ -14,7 +14,8 @@ namespace Employees.Data
         public DbSet<Project> Projects { get; set; }
         public DbSet<ProjectUser> ProjectUsers { get; set; }
         public DbSet<Labor> Labors { get; set; }
-        
+        public DbSet<BonusSettings> BonusSettings { get; set; }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
