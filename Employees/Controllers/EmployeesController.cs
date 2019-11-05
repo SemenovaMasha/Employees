@@ -96,5 +96,13 @@ namespace Employees.Controllers
         {
             return CurrentUser.Id==id || _userManager.IsInRoleAsync(CurrentUser, RolesNames.Admin).Result;
         }
+
+        public EmployeeUserDto GetCurrentUser()
+        {
+            return _employeeUsersService.Map(CurrentUser);
+        }
+        public void test(ReportType type)
+        {
+        }
     }
 }

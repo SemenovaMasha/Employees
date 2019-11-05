@@ -57,6 +57,7 @@ namespace Employees
             services.AddScoped<EmployeeUsersService>();
             services.AddScoped<ProjectService>();
             services.AddScoped<LaborsService>();
+            services.AddScoped<ReportsService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -16,13 +16,7 @@ namespace Employees.Controllers
         private ProjectService _projectService;
         private UserManager<EmployeeUser> _userManager;
 
-        private EmployeeUser CurrentUser
-        {
-            get
-            {
-                return _userManager.GetUserAsync(HttpContext.User).Result;
-            }
-        }
+        private EmployeeUser CurrentUser => _userManager.GetUserAsync(HttpContext.User).Result;
 
         public ProjectsController(ProjectService _projectService, UserManager<EmployeeUser> _userManager)
         {
