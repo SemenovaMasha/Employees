@@ -82,3 +82,6 @@ tr .custom-checkbox {
 .container table th[role="columnheader"] {
     vertical-align: middle;
 }
+.container .v-select{
+     --height: 0;
+}
