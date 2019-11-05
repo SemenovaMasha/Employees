@@ -11,6 +11,7 @@ namespace Employees.Models
     public class Labor
     {
         [Key] public long Id { get; set; }
+        public DateTime Date { get; set; }
         public Project Project { get; set; }
         public long ProjectId { get; set; }
         public string TaskNumber { get; set; }

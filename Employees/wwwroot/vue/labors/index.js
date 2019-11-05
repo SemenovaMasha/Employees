@@ -8,16 +8,40 @@
                   <i class="fas fa-plus"> Добавить</i>
                 </b-button>
 
-                <b-form-radio-group  v-model="allLaborsRadio" name="radioAllLabors" @change="changeAllLabors"  
-                        class="col-sm-9 offset-sm-1" style="padding-top: 7px;" v-if="isAdmin||isManager" >
+            </div>
+            <div class="form-group row ">
+                <b-form-radio-group  v-model="allLaborsRadio" name="radioAllLabors"
+                        class="col-sm-4" style="padding-top: 7px;" v-if="isAdmin||isManager" stacked>
                     <b-form-radio value="mine">Мои трудозатраты</b-form-radio>
                     <b-form-radio value="projects" v-if="isManager">Трудозатраты на моих проектах</b-form-radio>
                     <b-form-radio value="all" v-if="isAdmin">Все трудозатраты</b-form-radio>
               </b-form-radio-group>
+
+                <b-form-radio-group  v-model="allTimeRadio" name="allTimeRadio" 
+                        class="col-sm-7" style="padding-top: 7px;" stacked>
+                    <b-form-radio value="week">Текущая неделя</b-form-radio>
+                    <b-form-radio value="month" >Текущий месяц</b-form-radio>
+                    <b-form-radio value="range">Выбранный диапазон: 
+                                    <slot v-if="allTimeRadio=='range'">
+                                    с 
+                                     <date-picker name="date" v-model="rangeStartDate" lang="ru" format="DD.MM.YYYY" class="col-sm-8" placeholder=" "
+                                                                style="padding-left:2px;padding-right:0px;"></date-picker>
+                                    по
+                                    <date-picker name="date" v-model="rangeEndDate" lang="ru" format="DD.MM.YYYY" class="col-sm-8" placeholder=" "
+                                                                style="padding-left:2px;padding-right:0px;"></date-picker>
+                                    </slot>
+                    </b-form-radio>
+
+              </b-form-radio-group>
+
             </div>
         </div>
 
-    <b-table striped show-empty :items="filtered"  :fields="fields">
+    <b-table striped show-empty :items="filtered"  :fields="fields"  :sort-by.sync="defaultSort"  :sort-desc.sync="defaultSortDesc">
+
+    <template v-slot:cell(date)="data">
+       {{new Date(data.item.date).toLocaleDateString('ru-RU')}}
+      </template>
 
       <template v-slot:cell(user)="props">    
        <a :href="'/employees/details?id='+props.item.userId">{{props.item.user}} </a>
@@ -47,6 +71,7 @@
 
             <div class="card mb-3">
               <div class="card-body">
+                <p><h6 class="card-subtitle text-muted">Дата: {{new Date(row.item.date).toLocaleDateString('ru-RU')}}</h6></p>
                 <p><h6 class="card-subtitle text-muted">Проект: {{row.item.project}}</h6></p>
                 <p><h6 class="card-subtitle text-muted">Сотрудник: {{row.item.user}}</h6></p>
                 <p><h6 class="card-subtitle text-muted">Номер задачи: {{row.item.taskNumber}}</h6></p>
@@ -54,12 +79,12 @@
               </div>
               <ul class="list-group list-group-flush">
                 <li class="list-group-item">
-                    <p class="card-text">Тип задачи: {{row.item.type}}</p>
-                    <p class="card-text">Приоритет задачи: {{row.item.priority}}</p>
+                    <p class="card-text">Тип задачи: {{row.item.typeName}}</p>
+                    <p class="card-text">Приоритет задачи: {{row.item.priorityName}}</p>
                 </li>
                 <li class="list-group-item">
                     <p class="card-text">Оценочное время: {{row.item.estimatedTime}}</p>
-                    <p class="card-text">Приоритет задачи: {{row.item.elapsedTime}}</p>
+                    <p class="card-text">Затраченное время: {{row.item.elapsedTime}}</p>
                 </li>
                 <li class="list-group-item">
                     <p class="card-text" style="white-space: pre-wrap;">Примечание: {{row.item.note}}</p>
@@ -116,6 +141,13 @@
       </template>
      <div class="container">
             <b-form class="col-sm-11">
+                <div class="form-group row ">
+                      <label for="date" class="col-sm-4 col-form-label required">Дата</label>
+                         <date-picker name="date" v-model="currentItem.date" lang="ru" format="DD.MM.YYYY" class="col-sm-8" placeholder=" "
+                                                    style="padding-left:0px;padding-right:0px;"></date-picker>
+                        <div class="invalid-feedback col-sm-8 offset-sm-4"" style="display:block" v-if="!this.currentItem.date ">Выберите дату</div>  
+                </div>
+
                  <div class="form-group row ">
                       <label for="project" class="col-sm-4 col-form-label required">Проект</label>         
                       <v-select  placeholder=" " v-model="currentItem.project" as="name::id" :from="allProjects" tagging class="col-sm-8" ></v-select>              
@@ -191,10 +223,21 @@
     `,
     data: function () {
         return {
+            rangeStartDate: moment().startOf('year'),
+            rangeEndDate: moment().endOf('year'),
+            allTimeRadio:'week',
+            defaultSort: 'date',
+            defaultSortDesc: true,
             allLaborsRadio: 'mine',
             isAdmin: false,
             isManager: false,
             fields: [
+                {
+                    key: 'date',
+                    label: 'Дата',
+                    sortable: true,
+                    width: 2
+                },
                 {
                     key: 'project',
                     label: 'Проект',
@@ -217,7 +260,7 @@
                     key: 'elapsedTime',
                     label: 'Затраченное время',
                     sortable: true,
-                    width: 4
+                    width: 2
                 },
                 {
                     key: 'user',
@@ -228,7 +271,7 @@
                 {
                     key: 'actions',
                     label: '',
-                    width: 4,
+                    width: 5,
                 }
             ],
             allLabors: [],
@@ -256,7 +299,8 @@
                 elapsedTime: 0,
                 note: '',
                 user: '',
-                userId:''
+                userId: '',
+                date: null,
             },
             allProjects: [],
             allTypes: [],
@@ -277,6 +321,18 @@
                     this.allUsers = response.data
                 })
         },
+        'allLaborsRadio': function (newVal, oldVal) {
+            this.reloadTable();
+        },
+        'allTimeRadio': function (newVal, oldVal) {
+            this.reloadTable();
+        },
+        'rangeStartDate': function (newVal, oldVal) {
+            this.reloadTable();
+        },
+        'rangeEndDate': function (newVal, oldVal) {
+            this.reloadTable();
+        },
     },
     computed: {
         filtered() {
@@ -290,26 +346,10 @@
             return this.currentItem.taskNumber && $.trim(this.currentItem.taskNumber)
         }
     },
-    mounted() {
-        if (this.allLaborsRadio == 'mine') {
-            axios.get("/labors/GetAllMine")
-                .then(response => {
-                    this.allLabors = response.data
-                })
-        } else if (this.allLaborsRadio == 'projects') {
-            axios.get("/labors/GetAllMyProjects")
-                .then(response => {
-                    this.allLabors = response.data
-                })
-        } else {
-            axios.get("/labors/GetAll")
-                .then(response => {
-                    this.allLabors = response.data
-                })
-        }
+        mounted() {
+            this.reloadTable()
 
-        axios.get("/employees/isAdmin")
-            .then(response => {
+        axios.get("/employees/isAdmin").then(response => {
                 this.isAdmin = response.data
 
                 axios.get("/employees/isManager")
@@ -320,17 +360,14 @@
                     })
             })
 
-        axios.get("/projects/GetAllMine")
-            .then(response => {
+        axios.get("/projects/GetAllMine").then(response => {
                 this.allProjects = response.data
             })
 
-        axios.get("/labors/GetAllTypes")
-            .then(response => {
+        axios.get("/labors/GetAllTypes").then(response => {
                 this.allTypes = response.data
             })
-        axios.get("/labors/GetAllPrioritys")
-            .then(response => {
+        axios.get("/labors/GetAllPrioritys").then(response => {
                 this.allPrioritys = response.data
             })
 
@@ -338,30 +375,55 @@
                 params: {
                     id: this.currentItem.project.id
                 }
-            })
-            .then(response => {
+            }).then(response => {
                 this.allUsers = response.data
             })
     },
-    methods: {
-        changeAllLabors(value) {
-            if (value == 'mine') {
-                axios.get("/labors/GetAllMine")
-                    .then(response => {
-                        this.allLabors = response.data
+        methods: {
+            reloadTable() {
+                var startDate;
+                var endDate;
+                switch (this.allTimeRadio) {
+                    case 'week':
+                        startDate = moment().startOf('isoWeek')
+                        endDate = moment().endOf('isoWeek')
+                        break;
+                    case 'month':
+                        startDate = moment().startOf('month')
+                        endDate = moment().endOf('month')
+                        break;
+                    case 'range':
+                        startDate = this.rangeStartDate
+                        endDate = this.rangeEndDate
+                        break;
+                }
+                var params = {
+                    startDate: new Date(startDate),
+                    endDate: new Date(endDate)
+                }
+                if (this.allLaborsRadio == 'mine') {
+                    axios.get("/labors/GetAllMine", {
+                        params: params
                     })
-            } else if (value == 'projects') {
-                axios.get("/labors/GetAllMyProjects")
-                    .then(response => {
-                        this.allLabors = response.data
+                        .then(response => {
+                            this.allLabors = response.data
+                        })
+                } else if (this.allLaborsRadio == 'projects') {
+                    axios.get("/labors/GetAllMyProjects", {
+                        params: params
                     })
-            } else {
-                axios.get("/labors/GetAll")
-                    .then(response => {
-                        this.allLabors = response.data
+                        .then(response => {
+                            this.allLabors = response.data
+                        })
+                } else {
+                    axios.get("/labors/GetAll", {
+                        params: params
                     })
-            }
-        },
+                        .then(response => {
+                            this.allLabors = response.data
+                        })
+                }
+            },
         deleteLabor(item) {
             this.deletedId = item.id
             this.$bvModal.show('delete-modal')
@@ -395,6 +457,8 @@
                     this.currentItem.elapsedTime = response.data.estimatedTime;
                     this.currentItem.passportGiven = response.data.elapsedTime;
                     this.currentItem.note = response.data.note;
+
+                    this.currentItem.date = response.data.date ? new Date(response.data.date) : '';
                     
                     //this.currentItem.positionId = response.data.positionId;
                     if (response.data.project) {
@@ -445,13 +509,14 @@
                     this.$bvModal.show('edit-modal')
                 })
         },
-        editLabor(item) {
+        editLabor(item, key) {
             this.editId = item.id;
+            this.editKey = key;
             this.loadInfo()
         },
         editConfirm(evt) {
 
-            if (this.currentItem.project &&
+            if (this.currentItem.project&& this.currentItem.date &&                
                 this.currentItem.project != ' ' &&
                 this.currentItem.project.id != -1 &&
                 this.currentItem.type &&
@@ -466,6 +531,7 @@
                 this.currentItem.userId = this.currentItem.user.id
                 this.currentItem.project = this.currentItem.project.name
                 this.currentItem.user = this.currentItem.user.fio
+                this.currentItem.date.setHours(this.currentItem.date.getHours() + 11);
 
                 if (this.currentItem.id == -1) {
                     axios.post("/labors/Add", Object.assign({}, this.currentItem))
@@ -473,19 +539,13 @@
                             response.data.project = this.currentItem.project
                             response.data.user = this.currentItem.user
                             this.allLabors.unshift(response.data)
-
-
                         })
                 } else {
                     axios.post("/labors/Update", Object.assign({}, this.currentItem))
                         .then(response => {
                             response.data.project = this.currentItem.project
                             response.data.user = this.currentItem.user
-                            var el = this.allLabors.filter(item => {
-                                return item.id == response.data.id
-                            });
-
-                            Vue.set(this.allLabors, el[0].key, response.data)
+                            Vue.set(this.allLabors, this.editKey, response.data)
                         })
                 }
             } else {

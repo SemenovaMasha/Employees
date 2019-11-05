@@ -45,19 +45,19 @@ namespace Employees.Controllers
         //    return View("Edit", id);
         //}
 
-        public List<LaborDto> GetAll()
+        public List<LaborDto> GetAll(DateTime? startDate = null, DateTime? endDate = null)
         {
-            return _laborsService.GetAll();
+            return _laborsService.GetAll(startDate, endDate);
         }
 
-        public List<LaborDto> GetAllMine()
+        public List<LaborDto> GetAllMine(DateTime? startDate = null, DateTime? endDate = null)
         {
-            return _laborsService.GetAllByUser(CurrentUser.Id);
+            return _laborsService.GetAllByUser(CurrentUser.Id, startDate, endDate);
         }
 
-        public List<LaborDto> GetAllMyProjects()
+        public List<LaborDto> GetAllMyProjects(DateTime? startDate = null, DateTime? endDate = null)
         {
-            return _laborsService.GetAllMyProjects(CurrentUser.Id);
+            return _laborsService.GetAllMyProjects(CurrentUser.Id, startDate, endDate);
         }
 
         public LaborDto Get(long id)

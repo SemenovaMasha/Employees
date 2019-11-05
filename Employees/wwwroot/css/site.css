@@ -73,3 +73,12 @@ label.required:after {
 tr .custom-checkbox {
     text-align: center;
 }
+
+@media (min-width: 1200px) {
+    body .container {
+        max-width: 1210px;
+    }
+}
+.container table th[role="columnheader"] {
+    vertical-align: middle;
+}

@@ -42,6 +42,7 @@ namespace Employees.Services
             labor.ElapsedTime = dto.ElapsedTime;
             labor.Note = dto.Note;
             labor.UserId = dto.UserId;
+            labor.Date = dto.Date;
 
             return labor;
         }
@@ -64,32 +65,34 @@ namespace Employees.Services
                 User = model.User?.FIO,
                 PriorityName = model.Priority.GetDescription(),
                 TypeName = model.Type.GetDescription(),
+                Date=model.Date,
             };
         }
 
-        public List<LaborDto> GetAllByUser(string id)
+        public List<LaborDto> GetAllByUser(string id, DateTime? startDate = null, DateTime? endDate = null)
         {
             return _context.Labors
                 .Include(x => x.Project)
                 .Include(x => x.User)
-                .Where(x => x.UserId == id)
+                .Where(x => x.UserId == id && ((startDate != null && endDate != null) ? x.Date <= endDate && x.Date >= startDate : true))
                 .ToList().Select(x => Map(x)).ToList();
         }
 
-        public List<LaborDto> GetAllMyProjects(string id)
+        public List<LaborDto> GetAllMyProjects(string id, DateTime? startDate = null, DateTime? endDate = null)
         {
             return _context.Labors
                 .Include(x => x.Project)
                 .Include(x => x.User)
-                .Where(x => x.Project.ManagerId == id)
+                .Where(x => x.Project.ManagerId == id && ((startDate != null && endDate != null) ? x.Date <= endDate && x.Date >= startDate : true))
                 .ToList().Select(x => Map(x)).ToList();
         }
 
-        public List<LaborDto> GetAll()
+        public List<LaborDto> GetAll(DateTime? startDate = null, DateTime? endDate = null)
         {
             return _context.Labors
                 .Include(x=>x.Project)
                 .Include(x=>x.User)
+                .Where(x => (startDate != null && endDate != null) ? x.Date <= endDate && x.Date >= startDate : true)
                 .ToList().Select(x => Map(x)).ToList();
         }
         
@@ -129,7 +132,8 @@ namespace Employees.Services
                     Priority = 0,
                     Type = 0,
                     TypeName = TaskType.Other.GetDescription(),
-                    User = userFio
+                    User = userFio,
+                    Date = DateTime.Today
                 };
             }
             else

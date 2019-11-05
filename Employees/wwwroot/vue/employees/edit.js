@@ -15,12 +15,10 @@
         </div>
         <div class="form-group row ">
           <label for="birthDate" class="col-sm-4 col-form-label required">Дата рождения</label>
-         <date-picker name="birthDate" v-model="currentItem.birthDate" lang="ru" format="DD.MM.YYYY" class="col-sm-8" placeholder=" "
-                                    style="padding-left:0px;padding-right:0px;"></date-picker>
+             <date-picker name="birthDate" v-model="currentItem.birthDate" lang="ru" format="DD.MM.YYYY" class="col-sm-8" placeholder=" "
+                                        style="padding-left:0px;padding-right:0px;"></date-picker>
 
-        <div class="invalid-feedback col-sm-8 offset-sm-4"" style="display:block" v-if="!this.currentItem.birthDate ">Выберите дату</div>
-        
-
+            <div class="invalid-feedback col-sm-8 offset-sm-4"" style="display:block" v-if="!this.currentItem.birthDate ">Выберите дату</div>  
         </div>
 
         <div class="form-group row ">

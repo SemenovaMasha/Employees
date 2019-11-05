@@ -8,6 +8,7 @@ namespace Employees.Models.Dto
     public class LaborDto
     {
         public long Id { get; set; }
+        public DateTime Date { get; set; }
         public string Project { get; set; }
         public long ProjectId { get; set; }
         public string TaskNumber { get; set; }
