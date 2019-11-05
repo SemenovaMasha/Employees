@@ -26,6 +26,15 @@
             <label for="user" class="col-form-label ">по</label>  
             <date-picker name="date" v-model="endDate" lang="ru" format="DD.MM.YYYY" class="col-sm-2" placeholder=" "></date-picker>
         </div>  
+
+        <div class="form-group row ">
+            <b-button  @click="formReport()"  variant="success" class="col-sm-2">Сформировать</b-button>
+        </div>
+
+         <b-table striped show-empty :items="reportTableData" >
+             <template v-slot:empty="scope"><div style="text-align: center;">Нет записей для отображения</div></template>
+        </b-table>
+
     
     </div>
     `,
@@ -51,7 +60,8 @@
                 { value: 'OverTime', text: 'Отчет по сотрудникам, не укладывающимся в оценочное время' },
                 { value: 'TaskTypes', text: 'Распределение времени сотрудника по типам задач' },
                 { value: 'TaskTimes', text: 'Отчет об оценочном и фактическом затраченном времени на задачу' },
-            ]
+            ],
+            reportTableData:[]
         }
     },
     watch: {
@@ -97,10 +107,17 @@
             this.allProjects = response.data
         })
 
-
     },
     methods: {
-            
+        formReport() {
+            axios.get("/reports/GetReportTable", {
+                params: {
+                    id: this.project.id
+                }
+            }).then(response => {
+                this.reportTableData = response.data
+            })
+        }
     },
     components: {
         vSelect: VueSelect.vSelect,
