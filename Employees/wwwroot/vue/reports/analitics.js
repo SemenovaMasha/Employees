@@ -10,7 +10,7 @@
         <div class="form-group row" v-if="reportType!='OverTime'">
             <label for="project" class="col-sm-2 col-form-label ">Проект</label>         
             <v-select placeholder=" " v-model="project" as="name::id" :from="allProjects" tagging class="col-sm-4" ></v-select>  
-            <div class="invalid-feedback col-sm-8 offset-sm-2"" style="display:block" v-if="reportType == 'MatchEstimate' && !project">Для выбранного типа отчета необходимо выбрать проект</div>    
+            <div class="invalid-feedback col-sm-8 offset-sm-2"" style="display:block" v-if="(reportType == 'MatchEstimate'||reportType == 'NotMatchEstimate') && !project">Для выбранного типа отчета необходимо выбрать проект</div>    
 
         </div>              
 
@@ -160,7 +160,7 @@
     },
     methods: {
         formReport() {
-            if (this.reportType == 'MatchEstimate' && !this.project)
+            if ((this.reportType == 'MatchEstimate' || this.reportType == 'NotMatchEstimate') && !this.project)
                 return
 
             axios.get("/reports/GetReportTable", {
