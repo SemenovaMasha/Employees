@@ -141,7 +141,8 @@
           return item.id == data.data.id
         });
 
-          Vue.set(this.allBonuses, el[0].key, data.data)
+          var editItem = this.allBonuses.filter(item => { return item.id == data.data.id })[0];
+          Vue.set(this.allBonuses, this.allBonuses.indexOf(editItem), data.data)
         
       })
     }

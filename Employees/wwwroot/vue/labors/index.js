@@ -454,7 +454,8 @@
                     this.currentItem.id = response.data.id;
                     this.currentItem.taskNumber = response.data.taskNumber;
                     this.currentItem.taskName = response.data.taskName;
-                    this.currentItem.elapsedTime = response.data.estimatedTime;
+                    this.currentItem.elapsedTime = response.data.elapsedTime;
+                    this.currentItem.estimatedTime = response.data.estimatedTime;
                     this.currentItem.passportGiven = response.data.elapsedTime;
                     this.currentItem.note = response.data.note;
 
@@ -545,7 +546,9 @@
                         .then(response => {
                             response.data.project = this.currentItem.project
                             response.data.user = this.currentItem.user
-                            Vue.set(this.allLabors, this.editKey, response.data)
+
+                            var editLabor = this.allLabors.filter(item => { return item.id == response.data.id })[0];
+                            Vue.set(this.allLabors, this.allLabors.indexOf(editLabor), response.data)
                         })
                 }
             } else {

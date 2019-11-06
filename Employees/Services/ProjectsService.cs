@@ -83,7 +83,12 @@ namespace Employees.Services
             _context.SaveChanges();
             return Map(project);
         }
-        
+
+        public List<ProjectDto> GetProjectByManager(string id)
+        {
+            return _context.Projects.Include(x => x.Manager).Where(x=>x.ManagerId == id).ToList().Select(x => Map(x)).ToList();
+        }
+
         public ProjectDto Update(ProjectDto dto)
         {
             Project project = Map(dto);

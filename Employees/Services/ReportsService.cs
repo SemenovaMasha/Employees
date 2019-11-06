@@ -32,6 +32,9 @@ namespace Employees.Services
                 case ReportType.Labors:
                     sql = GetLaborsReportSqlCommand(reportSettings);
                     return GetDataTableFromSql(sql);
+                case ReportType.MatchEstimate:
+                    sql = GetMatchEstimateReportSqlCommand(reportSettings);
+                    return GetDataTableFromSql(sql);
                 default:
                     return GetDataTableFromSql("select * from labors");
             }
@@ -96,6 +99,31 @@ where 1 = 1
     {(reportSettings.EndDate.HasValue ? $"and l.Date <= '{reportSettings.EndDate.Value.ToString("yyyy-MM-dd")}'" : "")}
 
 order by l.Date desc
+";
+        }
+
+        private string GetMatchEstimateReportSqlCommand(ReportSettings reportSettings)
+        {
+            return $@"
+select fio as'Сотрудник' , sumEstimated as'Сумма оценочного времени' , sumElapsed as'Сумма затраченного времени' 
+	,cast(round(((1-   sumElapsed* 1.0  /  NULLIF(sumEstimated,0)  )*100),2)  as numeric(36,2)) as 'Процент сокращения времени'
+from (
+        select e.FIO as 'fio' , COALESCE(sum(l.EstimatedTime),0)  as 'sumEstimated',
+		COALESCE(sum(l.ElapsedTime),0) as 'sumElapsed'
+		from labors as l
+		join AspNetUsers as e on e.Id = l.UserId
+
+
+		where 1 = 1 
+            {(reportSettings.ProjectId == -1 ? "" : $"and l.ProjectId = '{reportSettings.ProjectId}'")}
+            {(reportSettings.StartDate.HasValue ? $"and l.Date >= '{reportSettings.StartDate.Value.ToString("yyyy-MM-dd")}'" : "")}
+            {(reportSettings.EndDate.HasValue ? $"and l.Date <= '{reportSettings.EndDate.Value.ToString("yyyy-MM-dd")}'" : "")}
+
+		group by e.fio
+      ) as timeSum
+where timeSum.sumEstimated >= timeSum.sumElapsed
+
+order by fio
 ";
         }
     }

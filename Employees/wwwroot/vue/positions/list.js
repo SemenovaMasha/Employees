@@ -129,7 +129,8 @@
           return item.id == data.data.id
         });
 
-        Vue.set(this.allPositions, el[0].key, data.data)
+          var editItem = this.allPositions.filter(item => { return item.id == data.data.id })[0];
+          Vue.set(this.allPositions, this.allPositions.indexOf(editItem), data.data)
         
       })
     }

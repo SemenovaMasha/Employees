@@ -88,6 +88,10 @@ namespace Employees.Controllers
         {
             return _projectService.GetProjectUsers(id);
         }
+        public List<ProjectDto> GetProjectByManager(string id)
+        {
+            return _projectService.GetProjectByManager(id);
+        }
 
         public List<EmployeeUserDto> GetUsersToChoose(long id)
         {

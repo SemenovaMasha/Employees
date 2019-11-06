@@ -2,23 +2,25 @@
 {
     template: `
     <div>
-        <div class="form-group row ">
+        <div class="form-group row">
             <label for="reportType" class="col-sm-2 col-form-label ">Вид отчета</label> 
             <b-form-select v-model="reportType" :options="reportTypes" class="col-sm-8" disable="true"></b-form-select>
         </div>              
 
-        <div class="form-group row ">
+        <div class="form-group row" v-if="reportType!='OverTime'">
             <label for="project" class="col-sm-2 col-form-label ">Проект</label>         
-            <v-select placeholder=" " v-model="project" as="name::id" :from="allProjects" tagging class="col-sm-4" ></v-select>       
+            <v-select placeholder=" " v-model="project" as="name::id" :from="allProjects" tagging class="col-sm-4" ></v-select>  
+            <div class="invalid-feedback col-sm-8 offset-sm-2"" style="display:block" v-if="reportType == 'MatchEstimate' && !project">Для выбранного типа отчета необходимо выбрать проект</div>    
+
         </div>              
 
-        <div class="form-group row "">
+        <div class="form-group row"  v-if="reportType!='MatchEstimate' && reportType!='NotMatchEstimate' && reportType!='OverTime'">
             <label for="user" class="col-sm-2 col-form-label ">Сотрудник</label>         
             <v-select placeholder=" " v-model="user" as="fio::id" :from="allUsers" tagging class="col-sm-4" v-if="(project && (project.managerId==currentUser.id))"></v-select> 
             <b-form-input readonly class="col-sm-4" :value="user ? user.fio :''" v-else></b-form-input> 
         </div>  
 
-        <div class="form-group row "">
+        <div class="form-group row">
             <label for="user" class="col-sm-1 col-form-label ">Период</label>     
             <label for="user" class="col-form-label ">c</label>  
              <date-picker name="date" v-model="startDate" lang="ru" format="DD.MM.YYYY" class="col-sm-2" placeholder=" "></date-picker>
@@ -27,7 +29,7 @@
             <date-picker name="date" v-model="endDate" lang="ru" format="DD.MM.YYYY" class="col-sm-2" placeholder=" "></date-picker>
         </div>  
 
-        <div class="form-group row ">
+        <div class="form-group row">
             <b-button  @click="formReport()"  variant="success" class="col-sm-2">Сформировать</b-button>
         </div>
 
@@ -60,7 +62,7 @@
                 { value: 'Labors', text: 'Отчет «Трудозатраты» сотрудников' },
                 { value: 'MatchEstimate', text: 'Отчет по сотрудникам, укладывающимся в оценочное время' },
                 { value: 'NotMatchEstimate', text: 'Отчет по сотрудникам, не укладывающимся в оценочное время' },
-                { value: 'OverTime', text: 'Отчет по сотрудникам, не укладывающимся в оценочное время' },
+                { value: 'OverTime', text: 'Отчет по сотрудникам, отработавшим сверх нормы' },
                 { value: 'TaskTypes', text: 'Распределение времени сотрудника по типам задач' },
                 { value: 'TaskTimes', text: 'Отчет об оценочном и фактическом затраченном времени на задачу' },
             ],
@@ -72,12 +74,12 @@
         }
     },
     watch: {
-        'project': function (newVal, oldVal) {            
+        'project': function (newVal, oldVal) {
             if (this.project && (this.project.managerId == this.currentUser.id)) {
                 axios.get("/projects/GetProjectUsers", {
                     params: {
                         id: this.project.id
-                    }                   
+                    }
                 }).then(response => {
                     this.allUsers = response.data
 
@@ -92,11 +94,41 @@
             } else {
                 this.user = {
                     id: this.currentUser.id,
-                    fio: this.currentUser.fio,                    
+                    fio: this.currentUser.fio,
                 }
                 this.allUsers = [this.user]
-                this.reportTypes = this.employeeReportTypes
-                this.reportType= 'Labors'
+                if (this.isManager)
+                    this.reportTypes = this.allReportTypes
+                else {
+                    this.reportTypes = this.employeeReportTypes
+                    this.reportType = 'Labors'
+                }
+            }
+        },
+        'reportType': function (newVal, oldVal) {
+            if (this.reportType != 'Labors') {
+                axios.get("/projects/GetProjectByManager", {
+                    params: {
+                        id: this.currentUser.id
+                    }
+                }).then(response => {
+                    this.allProjects = response.data
+                    if (this.project) {
+                        if (this.allProjects.filter(item => { return item.id != this.project.id }).lenght == 0) {
+                            this.project = ''
+                        }
+                    }                    
+                })
+            } else {
+                axios.get("/projects/GetAllMine").then(response => {
+                    this.allProjects = response.data
+                    if (this.project) {
+                        if (this.allProjects.filter(item => { return item.id != this.project.id }).lenght == 0) {
+                            this.project = ''
+                        }
+                    }
+                })
+
             }
         },
     },
@@ -128,6 +160,9 @@
     },
     methods: {
         formReport() {
+            if (this.reportType == 'MatchEstimate' && !this.project)
+                return
+
             axios.get("/reports/GetReportTable", {
                 params: {
                     reportType: this.reportType,
