@@ -4,12 +4,12 @@
     <div>
 
         <div class="form-group row ">
-            <label for="project" class="col-sm-4 col-form-label required">Проект</label>         
+            <label for="project" class="col-sm-4 col-form-label">Проект</label>         
             <v-select placeholder=" " v-model="project" as="name::id" :from="allProjects" tagging class="col-sm-8" ></v-select>       
         </div>              
 
         <div class="form-group row "">
-            <label for="user" class="col-sm-4 col-form-label required">Сотрудник</label>         
+            <label for="user" class="col-sm-4 col-form-label">Сотрудник</label>         
             <v-select placeholder=" " v-model="user" as="fio::id" :from="allUsers" tagging class="col-sm-8" v-if="(project && (project.managerId==currentUser.id))"></v-select> 
             <b-form-input readonly class="col-sm-8" :value="user ? user.fio :''" v-else></b-form-input> 
         </div>  
