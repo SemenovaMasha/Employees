@@ -4,7 +4,7 @@
     <div>
         <div class="form-group row ">
             <label for="reportType" class="col-sm-2 col-form-label ">Вид отчета</label> 
-            <b-form-select v-model="reportType" :options="reportTypes" class="col-sm-8"></b-form-select>
+            <b-form-select v-model="reportType" :options="reportTypes" class="col-sm-8" disable="true"></b-form-select>
         </div>              
 
         <div class="form-group row ">
@@ -33,6 +33,8 @@
 
          <b-table striped show-empty :items="reportTableData" >
              <template v-slot:empty="scope"><div style="text-align: center;">Нет записей для отображения</div></template>
+
+              <template v-slot:head()="data">{{data.label.charAt(0).toUpperCase() + data.label.slice(1)}}</template>
         </b-table>
 
     
@@ -53,7 +55,8 @@
             endDate: moment().endOf('month'),
             monthDate: null,
 
-            reportTypes: [
+            reportTypes: [],
+            allReportTypes: [
                 { value: 'Labors', text: 'Отчет «Трудозатраты» сотрудников' },
                 { value: 'MatchEstimate', text: 'Отчет по сотрудникам, укладывающимся в оценочное время' },
                 { value: 'NotMatchEstimate', text: 'Отчет по сотрудникам, не укладывающимся в оценочное время' },
@@ -61,12 +64,15 @@
                 { value: 'TaskTypes', text: 'Распределение времени сотрудника по типам задач' },
                 { value: 'TaskTimes', text: 'Отчет об оценочном и фактическом затраченном времени на задачу' },
             ],
-            reportTableData:[]
+            employeeReportTypes: [
+                { value: 'Labors', text: 'Отчет «Трудозатраты» сотрудников' },
+            ],
+            reportTableData: [],
+            isManager: false,
         }
     },
     watch: {
-        'project': function (newVal, oldVal) {
-            
+        'project': function (newVal, oldVal) {            
             if (this.project && (this.project.managerId == this.currentUser.id)) {
                 axios.get("/projects/GetProjectUsers", {
                     params: {
@@ -82,12 +88,15 @@
                         }
                     }
                 })
+                this.reportTypes = this.allReportTypes
             } else {
                 this.user = {
                     id: this.currentUser.id,
                     fio: this.currentUser.fio,                    
                 }
                 this.allUsers = [this.user]
+                this.reportTypes = this.employeeReportTypes
+                this.reportType= 'Labors'
             }
         },
     },
@@ -107,12 +116,25 @@
             this.allProjects = response.data
         })
 
+        axios.get("/employees/isManager")
+            .then(response => {
+                this.isManager = response.data
+                if (this.isManager)
+                    this.reportTypes = this.allReportTypes
+                else
+                    this.reportTypes = this.employeeReportTypes
+            })
+
     },
     methods: {
         formReport() {
             axios.get("/reports/GetReportTable", {
                 params: {
-                    id: this.project.id
+                    reportType: this.reportType,
+                    userId: this.user ? this.user.id : '',
+                    projectId: this.project ? this.project.id : -1,
+                    startDate: new Date(this.startDate),
+                    endDate: new Date(this.endDate),
                 }
             }).then(response => {
                 this.reportTableData = response.data

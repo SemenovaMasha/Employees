@@ -1,5 +1,7 @@
 ﻿using Employees.Models;
+using Employees.Models.Dto;
 using Employees.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -25,13 +27,15 @@ namespace Employees.Controllers
             this._userManager = _userManager;
         }
 
-        public DataTable GetReportTable()
+        public DataTable GetReportTable(ReportSettings reportSettings)
         {
-            return _reportsService.GetReportTable();
+            return _reportsService.GetReportTable(reportSettings);
         }
 
+        [Authorize]
         public ActionResult Analitics() => View();
 
+        [Authorize]
         public ActionResult Finance() => View();
 
     }
