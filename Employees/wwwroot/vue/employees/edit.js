@@ -136,7 +136,7 @@
             
             if (this.currentItem.position && this.currentItem.birthDate && this.currentItem.position != ' ' && this.currentItem.position.id !=-1) {
                 this.currentItem.positionId = this.currentItem.position.id
-                this.currentItem.position = this.currentItem.position.name
+                this.currentItem.position = ''
                 if (this.currentItem.id == '') {
                     axios.post("/employees/Add", Object.assign({}, this.currentItem))
                         .then(response => {

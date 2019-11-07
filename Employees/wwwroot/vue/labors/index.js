@@ -50,7 +50,7 @@
        <a :href="'/projects/details?id='+props.item.projectId">{{props.item.project}} </a>
       </template>
 
-      <template v-slot:cell(task)="props">    
+      <template v-slot:cell(taskNumber)="props">    
         {{(props.item.taskNumber||'') + ' ' + (props.item.taskName||'')}}
       </template>
 
@@ -245,7 +245,7 @@
                     width: 4
                 },
                 {
-                    key: 'task',
+                    key: 'taskNumber',
                     label: 'Задача',
                     sortable: true,
                     width: 6
@@ -277,7 +277,7 @@
             allLabors: [],
             filters: {
                 project: '',
-                task: '',
+                taskNumber: '',
                 typeName: '',
                 key: '',
                 user: '',

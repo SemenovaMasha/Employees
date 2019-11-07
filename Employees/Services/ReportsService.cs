@@ -44,35 +44,14 @@ namespace Employees.Services
                 case ReportType.TaskTypes:
                     sql = GetTaskTypesReportSqlCommand(reportSettings);
                     return GetDataTableFromSql(sql);
+                case ReportType.TaskTimes:
+                    sql = GetTaskTimesReportSqlCommand(reportSettings);
+                    return GetDataTableFromSql(sql);
                 default:
                     return GetDataTableFromSql("select * from labors");
             }
         }
-        //public void GetReportTable()
-        //{
-        //    using (var connection = _context.Database.GetDbConnection())
-        //    {
-        //        connection.Open();
-
-        //        using (var cmd = connection.CreateCommand())
-        //        {
-        //            cmd.CommandText = "SELECT * from labors";
-        //            //using (var reader = cmd.ExecuteReader())
-        //            //{
-        //            //    while (reader.Read())
-        //            //    {                            
-        //            //    }
-        //            //}
-
-        //            using (var reader = cmd.ExecuteReader())
-        //            {
-        //                var dataTable = new DataTable();
-        //                dataTable.Load(reader);
-        //            }
-        //        }
-        //    }
-        //}
-
+        
         private DataTable GetDataTableFromSql(string sql)
         {
             using (var connection = _context.Database.GetDbConnection())
@@ -192,7 +171,7 @@ order by fio
             var pivotCol = new List<string>();
             foreach (var type in taskTypes)
             {
-                columnNames.Add( $"[{(int)type}] as '{type.GetDescription()}'");
+                columnNames.Add($"[{(int)type}] as '{type.GetDescription()}'");
                 pivotCol.Add($"[{(int)type}]");
             }
             var columns = String.Join(", ", columnNames.ToArray());
@@ -215,6 +194,28 @@ pivot
   sum(ElapsedTime)
   for ""Type"" in ({pivotIn})
 ) as piv
+";
+        }
+
+        private string GetTaskTimesReportSqlCommand(ReportSettings reportSettings)
+        {
+            return $@"
+select task as'Номер задачи', project as 'Проект',sumEstimated as 'Сумма оценочного времени',
+	sumElapsed as'Сумма затраченного времени',sumElapsed -sumEstimated  as 'Разница'
+from (
+        select p.name as project, l.TaskNumber as task ,  COALESCE(sum(l.EstimatedTime),0)  as 'sumEstimated', COALESCE(sum(l.ElapsedTime),0) as 'sumElapsed'
+		from labors as l
+		join Projects as p on p.Id = l.ProjectId
+
+        where 1 = 1        
+        {(string.IsNullOrEmpty(reportSettings.UserId) ? "" : $"and l.UserId = '{reportSettings.UserId}'")}
+        {(reportSettings.ProjectId == -1 ? "" : $"and l.ProjectId = '{reportSettings.ProjectId}'")}
+        {(reportSettings.StartDate.HasValue ? $"and l.Date >= '{reportSettings.StartDate.Value.ToString("yyyy-MM-dd")}'" : "")}
+        {(reportSettings.EndDate.HasValue ? $"and l.Date <= '{reportSettings.EndDate.Value.ToString("yyyy-MM-dd")}'" : "")}
+
+            group by l.TaskNumber, p.name
+      ) as timeSum
+order by task
 ";
         }
 
