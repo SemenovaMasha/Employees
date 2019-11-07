@@ -38,6 +38,12 @@ namespace Employees.Services
                 case ReportType.NotMatchEstimate:
                     sql = GetNotMatchEstimateReportSqlCommand(reportSettings);
                     return GetDataTableFromSql(sql);
+                case ReportType.OverTime:
+                    sql = GetOverTimeReportSqlCommand(reportSettings);
+                    return GetDataTableFromSql(sql);
+                case ReportType.TaskTypes:
+                    sql = GetTaskTypesReportSqlCommand(reportSettings);
+                    return GetDataTableFromSql(sql);
                 default:
                     return GetDataTableFromSql("select * from labors");
             }
@@ -152,6 +158,63 @@ from (
 where timeSum.sumEstimated < timeSum.sumElapsed
 
 order by fio
+";
+        }
+
+        private string GetOverTimeReportSqlCommand(ReportSettings reportSettings)
+        {
+            int workingDaysCount = GetWorkingDays(reportSettings.StartDate ?? DateTime.MinValue, reportSettings.EndDate ?? DateTime.MaxValue);
+            return $@"
+select fio as'Сотрудник', workDays as 'Количество рабочих дней',workMinutes as 'Количество рабочих минут',
+	sumElapsed as'Количество отработанных минут' 
+	,cast(round(((sumElapsed * 1.0  /  NULLIF(workMinutes,0) -1    )*100),2)  as numeric(36,2)) as 'Процент переработки'
+
+from (
+        select {workingDaysCount} as workDays, {workingDaysCount}*480 as workMinutes , e.FIO as 'fio' , COALESCE(sum(l.ElapsedTime),0) as 'sumElapsed'
+		from labors as l
+		join AspNetUsers as e on e.Id = l.UserId
+
+		where 1 = 1 
+            {(reportSettings.StartDate.HasValue ? $"and l.Date >= '{reportSettings.StartDate.Value.ToString("yyyy-MM-dd")}'" : "")}
+            {(reportSettings.EndDate.HasValue ? $"and l.Date <= '{reportSettings.EndDate.Value.ToString("yyyy-MM-dd")}'" : "")}
+            group by e.fio
+      ) as timeSum
+where timeSum.sumElapsed > timeSum.workMinutes
+order by fio
+";
+        }
+
+        private string GetTaskTypesReportSqlCommand(ReportSettings reportSettings)
+        {
+            var taskTypes = Enum.GetValues(typeof(TaskType)).Cast<TaskType>();
+
+            var columnNames = new List<string>();
+            var pivotCol = new List<string>();
+            foreach (var type in taskTypes)
+            {
+                columnNames.Add( $"[{(int)type}] as '{type.GetDescription()}'");
+                pivotCol.Add($"[{(int)type}]");
+            }
+            var columns = String.Join(", ", columnNames.ToArray());
+            var pivotIn = String.Join(", ", pivotCol.ToArray());
+
+            return $@"
+select fio as 'Сотрудник',{columns}
+from
+(
+	select fio, ElapsedTime,""Type"" from Labors l 
+    join AspNetUsers as e on e.Id = l.UserId
+        where 1 = 1        
+        {(string.IsNullOrEmpty(reportSettings.UserId) ? "" : $"and l.UserId = '{reportSettings.UserId}'")}
+        {(reportSettings.ProjectId == -1 ? "" : $"and l.ProjectId = '{reportSettings.ProjectId}'")}
+        {(reportSettings.StartDate.HasValue ? $"and l.Date >= '{reportSettings.StartDate.Value.ToString("yyyy-MM-dd")}'" : "")}
+        {(reportSettings.EndDate.HasValue ? $"and l.Date <= '{reportSettings.EndDate.Value.ToString("yyyy-MM-dd")}'" : "")}
+) as d
+pivot
+(
+  sum(ElapsedTime)
+  for ""Type"" in ({pivotIn})
+) as piv
 ";
         }
 
