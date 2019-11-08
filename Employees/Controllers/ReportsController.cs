@@ -38,5 +38,16 @@ namespace Employees.Controllers
         [Authorize]
         public ActionResult Finance() => View();
 
+        [HttpPost]
+        public IActionResult ExportPdf([FromBody]ReportSettings settings)
+        {
+            return File(_reportsService.ExportPDF(settings), "application/pdf");
+        }
+
+        [HttpPost]
+        public IActionResult ExportExcel([FromBody]ReportSettings settings)
+        {
+            return File(_reportsService.ExportExcel(settings), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        }
     }
 }

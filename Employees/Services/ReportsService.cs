@@ -1,7 +1,11 @@
-﻿using Employees.Data;
+﻿using ClosedXML.Excel;
+using Employees.Data;
 using Employees.Models;
 using Employees.Models.Dto;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -10,6 +14,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -309,6 +314,104 @@ select top(1) (b.BonusPercent*1.0/100) as bonusPercent, b.Coef as coef from (
                 coef = 1;
             }
         }
+
+        private byte[] exportpdf(DataTable dtEmployee,string reportName)
+        {
+            // creating document object  
+            System.IO.MemoryStream ms = new System.IO.MemoryStream();
+            iTextSharp.text.Rectangle rec = new iTextSharp.text.Rectangle(PageSize.A4);
+            rec.BackgroundColor = new BaseColor(System.Drawing.Color.Olive);
+            Document doc = new Document(rec);
+            doc.SetPageSize(iTextSharp.text.PageSize.A4.Rotate());
+            //doc.SetPageSize(iTextSharp.text.PageSize.A4);
+            PdfWriter writer = PdfWriter.GetInstance(doc, ms);
+            doc.Open();
+
+            BaseFont baseFont = BaseFont.CreateFont(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../wwwroot/fonts/Arial.ttf"), BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
+            //Creating paragraph for header  
+            BaseFont bfntHead = baseFont;
+            iTextSharp.text.Font fntHead = new iTextSharp.text.Font(bfntHead, 16, 1, iTextSharp.text.BaseColor.BLACK);
+            Paragraph prgHeading = new Paragraph();
+            prgHeading.Alignment = Element.ALIGN_LEFT;
+            prgHeading.Add(new Chunk(reportName.ToUpper(), fntHead));
+            doc.Add(prgHeading);
+
+            //Adding a line  
+            Paragraph p = new Paragraph(new Chunk(new iTextSharp.text.pdf.draw.LineSeparator(0.0F, 100.0F, iTextSharp.text.BaseColor.BLACK, Element.ALIGN_LEFT, 1)));
+            doc.Add(p);
+
+            //Adding line break  
+            doc.Add(new Chunk("\n", fntHead));
+
+            //Adding  PdfPTable  
+            PdfPTable table = new PdfPTable(dtEmployee.Columns.Count);
+
+            for (int i = 0; i < dtEmployee.Columns.Count; i++)
+            {
+                string cellText = dtEmployee.Columns[i].ColumnName;
+                PdfPCell cell = new PdfPCell();
+                cell.Phrase = new Phrase(cellText, new iTextSharp.text.Font(baseFont));
+                cell.BackgroundColor = new BaseColor(200, 200, 200);
+                //cell.Phrase = new Phrase(cellText, new Font(Font.FontFamily.TIMES_ROMAN, 10, 1, new BaseColor(grdStudent.HeaderStyle.ForeColor)));  
+                //cell.BackgroundColor = new BaseColor(grdStudent.HeaderStyle.BackColor);  
+                cell.HorizontalAlignment = Element.ALIGN_CENTER;
+                cell.PaddingBottom = 5;
+                table.AddCell(cell);
+            }
+
+            //writing table Data  
+            for (int i = 0; i < dtEmployee.Rows.Count; i++)
+            {
+                for (int j = 0; j < dtEmployee.Columns.Count; j++)
+                {
+                    table.AddCell( new Phrase(dtEmployee.Rows[i][j].ToString(), new iTextSharp.text.Font(baseFont)));
+                }
+            }
+
+            //Paragraph p2 = new Paragraph();
+            ////p2.IndentationLeft = 100;
+            ////table.HorizontalAlignment = Element.ALIGN_LEFT;
+            //p2.Add(table);
+            //doc.Add(p);
+
+            table.WidthPercentage = 100;
+            doc.Add(table);
+            doc.Close();
+
+            byte[] result = ms.ToArray();
+            return result;
+
+        }
+
+        public byte[] ExportPDF(ReportSettings settings)
+        {
+            return exportpdf(GetReportTable(settings), settings.ReportType.GetDescription());
+        }
+
+        public byte[] ExportExcel(ReportSettings settings)
+        {
+            return exportExcel(GetReportTable(settings), settings.ReportType.GetDescription());
+        }
+
+        private byte[] exportExcel(DataTable dt, string sheet)
+        {
+            using (var workbook = new XLWorkbook())
+            {
+                workbook.Worksheets.Add(dt, "Отчет");
+
+                //workbook.SaveAs("HelloWorld.xlsx");
+
+                var workbookBytes = new byte[0];
+                using (var ms = new MemoryStream())
+                {
+                    workbook.SaveAs(ms);
+                    workbookBytes = ms.ToArray();
+                }
+
+                return workbookBytes;
+            }
+        }
+
     }
 
 }

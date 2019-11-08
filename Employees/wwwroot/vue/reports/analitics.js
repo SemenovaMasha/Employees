@@ -31,6 +31,15 @@
 
         <div class="form-group row">
             <b-button  @click="formReport()"  variant="success" class="col-sm-2">Сформировать</b-button>
+            <b-button-group style="margin-left: 10px;">
+                <b-dropdown right text="Экспорт" variant="info">
+                  <b-dropdown-item  @click="exportPdf()" >PDF</b-dropdown-item>
+                  <b-dropdown-item  @click="exportExcel()" >Excel</b-dropdown-item>
+                </b-dropdown>
+              </b-button-group>
+        </div>
+        <div class="form-group row">
+           
         </div>
 
          <b-table striped show-empty :items="reportTableData" >
@@ -175,7 +184,57 @@
             }).then(response => {
                 this.reportTableData = response.data
             })
-        }
+        },
+        exportPdf() {
+            axios.post("/reports/exportPdf",
+                {
+                    reportType: this.reportType,
+                    userId: this.user ? this.user.id : '',
+                    projectId: this.project ? this.project.id : -1,
+                    startDate: new Date(this.startDate),
+                    endDate: new Date(this.endDate),
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/pdf'
+                    },
+                    responseType: "blob"
+                }).then((response) => {
+                    var filename = this.allReportTypes.filter(item => { return item.value == this.reportType })[0].text;
+
+                    var blob = new Blob([response.data], { type: "application/pdf" });
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = filename + moment(new Date()).format(" DD-MM-YYYY") + ".pdf";
+                    link.click();
+                });
+        },
+        exportExcel() {
+            axios.post("/reports/exportExcel",
+                {
+                    reportType: this.reportType,
+                    userId: this.user ? this.user.id : '',
+                    projectId: this.project ? this.project.id : -1,
+                    startDate: new Date(this.startDate),
+                    endDate: new Date(this.endDate),
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    },
+                    responseType: "blob"
+                }).then((response) => {
+                    var filename = this.allReportTypes.filter(item => { return item.value == this.reportType })[0].text;
+
+                    var blob = new Blob([response.data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = filename + moment(new Date()).format(" DD-MM-YYYY") + ".xlsx";
+                    link.click();
+                });
+        },
     },
     components: {
         vSelect: VueSelect.vSelect,

@@ -85,3 +85,7 @@ tr .custom-checkbox {
 .container .v-select{
      --height: 0;
 }
+.container .dropdown-item:hover {
+    color: #212529;
+    background-color: #dae0e2;
+}
