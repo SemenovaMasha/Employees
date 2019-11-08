@@ -65,6 +65,7 @@
                 { value: 'OverTime', text: 'Отчет по сотрудникам, отработавшим сверх нормы' },
                 { value: 'TaskTypes', text: 'Распределение времени сотрудника по типам задач' },
                 { value: 'TaskTimes', text: 'Отчет об оценочном и фактическом затраченном времени на задачу' },
+                { value: 'Bonus', text: 'Bonus' },
             ],
             employeeReportTypes: [
                 { value: 'Labors', text: 'Отчет «Трудозатраты» сотрудников' },

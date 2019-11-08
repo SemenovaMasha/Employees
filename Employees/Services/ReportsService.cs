@@ -3,10 +3,12 @@ using Employees.Models;
 using Employees.Models.Dto;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,11 +19,13 @@ namespace Employees.Services
     {
         private ApplicationDbContext _context;
         private UserManager<EmployeeUser> _userManager;
+        private readonly IConfiguration configuration;
 
-        public ReportsService(ApplicationDbContext _context, UserManager<EmployeeUser> _userManager)
+        public ReportsService(ApplicationDbContext _context, UserManager<EmployeeUser> _userManager, IConfiguration config)
         {
             this._context = _context;
             this._userManager = _userManager;
+            configuration = config; ;
         }
 
         public DataTable GetReportTable(ReportSettings reportSettings)
@@ -47,6 +51,8 @@ namespace Employees.Services
                 case ReportType.TaskTimes:
                     sql = GetTaskTimesReportSqlCommand(reportSettings);
                     return GetDataTableFromSql(sql);
+                case ReportType.Bonus:
+                    return GetBonusReportSqlCommand(reportSettings);
                 default:
                     return GetDataTableFromSql("select * from labors");
             }
@@ -54,21 +60,12 @@ namespace Employees.Services
         
         private DataTable GetDataTableFromSql(string sql)
         {
-            using (var connection = _context.Database.GetDbConnection())
+            var table = new DataTable();
+            using (var da = new SqlDataAdapter(sql, configuration.GetConnectionString("DefaultConnection")))
             {
-                connection.Open();
-
-                using (var cmd = connection.CreateCommand())
-                {
-                    cmd.CommandText = sql;
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        var dataTable = new DataTable();
-                        dataTable.Load(reader);
-                        return dataTable;
-                    }
-                }
+                da.Fill(table);
             }
+            return table;
         }
 
         private string GetLaborsReportSqlCommand(ReportSettings reportSettings)
@@ -219,6 +216,67 @@ order by task
 ";
         }
 
+        private DataTable GetBonusReportSqlCommand(ReportSettings reportSettings)
+        {
+            string sql = $@"
+select *, part * 100 as projectPartPercent, cast(round(part* 1.0 * sum1,2)as numeric(36,2)) as projectSum1,
+	cast(round(((1-  sumEstimated *1.0 /  NULLIF(sumElapsed, 0)  )*100),2)as numeric(36,2)) as timeDelta,
+	0.0 as bonusCoef, 0.0 as bonusSum
+
+	from(
+	select *,cast(round((sumElapsed*1.0/NULLIF(userTime, 0)),2)as numeric(36,2)) as part , Salary * userTime/10000   as sum1 from(
+		select distinct e.FIO as fio ,p.name as project , l.ProjectId as ProjectId
+			,COALESCE(sum(l.EstimatedTime) over(partition by l.userId,l.projectId) ,0)  as sumEstimated
+			,COALESCE(sum(l.ElapsedTime)over(partition by l.userId,l.projectId) ,0) as sumElapsed
+			,COALESCE(sum(l.ElapsedTime) over(partition by l.userId),0) as userTime
+			, e.Salary 
+			,e.Id 
+			from labors as l
+			join AspNetUsers as e on e.Id = l.UserId
+			join Projects as p on p.Id = l.ProjectId
+		
+        where 1 = 1        
+        {(string.IsNullOrEmpty(reportSettings.UserId) ? "" : $"and l.UserId = '{reportSettings.UserId}'")}
+        {(reportSettings.StartDate.HasValue ? $"and l.Date >= '{reportSettings.StartDate.Value.ToString("yyyy-MM-dd")}'" : "")}
+        {(reportSettings.EndDate.HasValue ? $"and l.Date <= '{reportSettings.EndDate.Value.ToString("yyyy-MM-dd")}'" : "")}
+
+	) as t
+) as t2
+
+        {(reportSettings.ProjectId == -1 ? "" : $"where ProjectId = '{reportSettings.ProjectId}'")}
+order by fio
+";
+            var table = GetDataTableFromSql(sql);
+
+            foreach(DataRow row in table.Rows)
+            {
+                var timeDelta = Convert.ToDecimal(row["timeDelta"]);
+                decimal coef;
+                decimal bonusPercent;
+                GetBonusCoef(Convert.ToInt64(row["ProjectId"]), timeDelta, out coef, out bonusPercent);
+                var bonusCoef = timeDelta > 0 ? (-bonusPercent) : (bonusPercent);
+                row["bonusCoef"] = decimal.Round(1+bonusCoef, 2);
+                row["bonusSum"] = decimal.Round(Convert.ToDecimal(row["projectSum1"]) * (bonusCoef) * (timeDelta < 0 ? coef : 1), 2);
+            }
+            table.Columns.Remove("ProjectId");
+            table.Columns.Remove("sumEstimated");
+            table.Columns.Remove("Salary");
+            table.Columns.Remove("Id");
+            table.Columns.Remove("part");
+            table.Columns.Remove("sum1");
+            table.Columns["fio"].ColumnName = "Сотрудник";
+            table.Columns["project"].ColumnName = "Проект";
+            table.Columns["sumElapsed"].ColumnName = "Минут на проекте";
+            table.Columns["userTime"].ColumnName = "Всего минут";
+            table.Columns["projectPartPercent"].ColumnName = "Процент времени на проекте";
+            table.Columns["projectSum1"].ColumnName = "Часть оклада за проект";
+            table.Columns["timeDelta"].ColumnName = "Процент отклонения времени";
+            table.Columns["bonusCoef"].ColumnName = "Коэффициент (де)премирования";
+            table.Columns["bonusSum"].ColumnName = "Сумма (де)премирования";
+
+            return table;
+        }
+
         public int GetWorkingDays(DateTime from, DateTime to)
         {
             var dayDifference = (int)to.Subtract(from).TotalDays;
@@ -226,6 +284,30 @@ order by task
                 .Range(1, dayDifference)
                 .Select(x => from.AddDays(x))
                 .Count(x => x.DayOfWeek != DayOfWeek.Saturday && x.DayOfWeek != DayOfWeek.Sunday);
+        }
+
+        private void GetBonusCoef(long projectId, decimal deltaPercent, out decimal coef, out decimal bonusPercent)
+        {
+            string sql = $@"
+select top(1) (b.BonusPercent*1.0/100) as bonusPercent, b.Coef as coef from (
+	select max(b.DeltaPercent) as maxDeltaPercent
+	from BonusSettings b
+	where 
+		b.ProjectId = {projectId} and 
+		b.DeltaPercent <= abs({deltaPercent.ToString().Replace(",",".")}) 
+) as x inner join BonusSettings as b on b.DeltaPercent = x.maxDeltaPercent
+";
+            DataTable table = GetDataTableFromSql(sql);
+            if (table.Rows.Count > 0)
+            {
+                bonusPercent = Convert.ToDecimal(table.Rows[0]["bonusPercent"].ToString());
+                coef = Convert.ToDecimal(table.Rows[0]["coef"].ToString());
+            }
+            else
+            {
+                bonusPercent = 0;
+                coef = 1;
+            }
         }
     }
 
