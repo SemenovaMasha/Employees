@@ -89,3 +89,15 @@ tr .custom-checkbox {
     color: #212529;
     background-color: #dae0e2;
 }
+
+header ul.navbar-nav li a {
+    color: #343a40 !important;
+}
+header ul.navbar-nav li.nav-item.dropdown ul > li > a {
+    font-family: "Montserrat", -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+header > nav ul.navbar-nav > li > a:hover {
+    color: #78c2ad !important;
+}

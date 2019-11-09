@@ -31,6 +31,7 @@ namespace Employees.Services
             }
 
             user.FIO = dto.FIO;
+            user.Email = dto.Mail;
             user.AdditionalInfo = dto.AdditionalInfo;
             user.PositionId = dto.PositionId;
             user.Address = dto.Address;
@@ -48,7 +49,8 @@ namespace Employees.Services
             return new EmployeeUserDto()
             {
                 Id = model.Id,
-                FIO = model.FIO,
+                Mail = model.Email,
+            FIO = model.FIO,
                 AdditionalInfo = model.AdditionalInfo,
                 PositionId = model.PositionId,
                 Position = model.Position?.Name,
@@ -78,6 +80,7 @@ namespace Employees.Services
         {
             EmployeeUser user = Map(dto);
             user.UserName = user.FIO;
+            user.Email = dto.Mail;
             var res = _userManager.CreateAsync(user, user.FIO).Result;
             res = _userManager.AddToRoleAsync(user, dto.Role).Result;
             _context.SaveChanges();

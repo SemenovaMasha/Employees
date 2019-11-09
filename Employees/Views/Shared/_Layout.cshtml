@@ -1,6 +1,11 @@
-﻿<!DOCTYPE html>
-<html>
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<EmployeeUser> SignInManager
+@inject UserManager<EmployeeUser> UserManager
+
+<!DOCTYPE html>
+<html lang="ru">
 <head>
+
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
@@ -20,20 +25,65 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Employees</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">СУРС</a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
-                    <partial name="_LoginPartial" />
+                    @*<partial name="_LoginPartial" />*@
+
+                    <ul class="navbar-nav">
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/ChangePassword" title="Управление">@Html.Raw(("Привет")) @User.Identity.Name!</a>
+                            </li>
+                            <li class="nav-item">
+                                <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                                    <button type="submit" class="nav-link btn btn-link text-dark">Выйти</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Войти</a>
+                            </li>
+                        }
+                    </ul>
+
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Employees" asp-action="Index">Сотрудники</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Projects" asp-action="Index">Проекты</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Labors" asp-action="Index">Трудозатраты</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Отчеты
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+                                <li><a class="nav-link text-dark dropdown-item" asp-area="" asp-controller="Reports" asp-action="Analitics">Аналитика</a></li>
+                                <li> <a class="nav-link text-dark dropdown-item" asp-area="" asp-controller="Reports" asp-action="Finance">Финансы</a></li>
+                            </ul>
+                        </li>
+                        @if (UserManager.IsInRoleAsync(UserManager.GetUserAsync(User).Result, RolesNames.Admin).Result)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Настройки
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+                                    <li><a class="nav-link text-dark dropdown-item" asp-area="" asp-controller="Position" asp-action="Index">Должности</a></li>
+                                    <li><a class="nav-link text-dark dropdown-item" asp-area="" asp-controller="BonusSettings" asp-action="Index">Ставки премирования</a></li>
+                                </ul>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
@@ -48,7 +98,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2019 - Employees - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2019 - УлГТУ
         </div>
     </footer>
 
@@ -79,6 +129,7 @@
     <script src="~/js/vue2-datepicker.js"></script>
     <script src="~/js/vue-select.js"></script>
     <script src="~/js/moment.js"></script>
+
 
 
     @RenderSection("Scripts", required: false)

@@ -24,6 +24,9 @@ Vue.component('employeedetails',
             <li class="list-group-item">
                 <p class="card-text">Адрес: {{currentItem.address}}</p>
             </li>
+            <li class="list-group-item">
+                <p class="card-text">Почта: {{currentItem.mail}}</p>
+            </li>
           </ul>
           <div class="card-footer text-muted">
             {{currentItem.role}}
@@ -44,6 +47,7 @@ Vue.component('employeedetails',
                     positionId: null,
                     position: '',
                     fio: "",
+                    mail: "",
                     education: "",
                     birthDate: null,
                     passportGiven: "",
@@ -78,6 +82,7 @@ Vue.component('employeedetails',
                     this.currentItem.id = response.data.id;
                     this.currentItem.positionId = response.data.positionId;
                     this.currentItem.fio = response.data.fio;
+                    this.currentItem.mail = response.data.mail;
                     this.currentItem.education = response.data.education;
                     this.currentItem.birthDate = response.data.birthDate;
                     this.currentItem.passportGiven = response.data.passportGiven;

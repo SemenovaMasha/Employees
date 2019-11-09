@@ -14,6 +14,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -255,13 +256,13 @@ order by fio
 
             foreach(DataRow row in table.Rows)
             {
-                var timeDelta = Convert.ToDecimal(row["timeDelta"]);
+                var timeDelta = Convert.ToDecimal(row["timeDelta"].ToString().Length>0?row["timeDelta"]:0);
                 decimal coef;
                 decimal bonusPercent;
                 GetBonusCoef(Convert.ToInt64(row["ProjectId"]), timeDelta, out coef, out bonusPercent);
                 var bonusCoef = timeDelta > 0 ? (-bonusPercent) : (bonusPercent);
                 row["bonusCoef"] = decimal.Round(1+bonusCoef, 2);
-                row["bonusSum"] = decimal.Round(Convert.ToDecimal(row["projectSum1"]) * (bonusCoef) * (timeDelta < 0 ? coef : 1), 2);
+                row["bonusSum"] = decimal.Round(Convert.ToDecimal(row["projectSum1"].ToString().Length > 0 ? row["projectSum1"] : 0) * (bonusCoef) * (timeDelta < 0 ? coef : 1), 2);
             }
             table.Columns.Remove("ProjectId");
             table.Columns.Remove("sumEstimated");
@@ -300,7 +301,7 @@ select top(1) (b.BonusPercent*1.0/100) as bonusPercent, b.Coef as coef from (
 	where 
 		b.ProjectId = {projectId} and 
 		b.DeltaPercent <= abs({deltaPercent.ToString().Replace(",",".")}) 
-) as x inner join BonusSettings as b on b.DeltaPercent = x.maxDeltaPercent
+) as x inner join BonusSettings as b on b.DeltaPercent = x.maxDeltaPercent  and b.ProjectId={projectId}
 ";
             DataTable table = GetDataTableFromSql(sql);
             if (table.Rows.Count > 0)
@@ -315,7 +316,7 @@ select top(1) (b.BonusPercent*1.0/100) as bonusPercent, b.Coef as coef from (
             }
         }
 
-        private byte[] exportpdf(DataTable dtEmployee,string reportName)
+        private byte[] exportpdf(DataTable dtEmployee, string reportName)
         {
             // creating document object  
             System.IO.MemoryStream ms = new System.IO.MemoryStream();
@@ -364,7 +365,7 @@ select top(1) (b.BonusPercent*1.0/100) as bonusPercent, b.Coef as coef from (
             {
                 for (int j = 0; j < dtEmployee.Columns.Count; j++)
                 {
-                    table.AddCell( new Phrase(dtEmployee.Rows[i][j].ToString(), new iTextSharp.text.Font(baseFont)));
+                    table.AddCell(new Phrase(dtEmployee.Rows[i][j].ToString(), new iTextSharp.text.Font(baseFont)));
                 }
             }
 
@@ -383,9 +384,152 @@ select top(1) (b.BonusPercent*1.0/100) as bonusPercent, b.Coef as coef from (
 
         }
 
+        private byte[] exportSalaryPdf(ReportSettings settings, string reportName)
+        {
+            var employee = _context.Users.Where(x => x.Id == settings.UserId).FirstOrDefault();
+
+            DataTable dtEmployee = GetBonusReportSqlCommand(settings);
+            dtEmployee.Columns.Remove("Сотрудник");
+            dtEmployee.Columns.Remove("Всего минут");
+            dtEmployee.Columns.Remove("Процент времени на проекте");
+            dtEmployee.Columns.Remove("Процент отклонения времени");
+            dtEmployee.Columns.Remove("Коэффициент (де)премирования");
+
+            // creating document object  
+            System.IO.MemoryStream ms = new System.IO.MemoryStream();
+            iTextSharp.text.Rectangle rec = new iTextSharp.text.Rectangle(PageSize.A4);
+            rec.BackgroundColor = new BaseColor(System.Drawing.Color.Olive);
+            Document doc = new Document(rec);
+            doc.SetPageSize(iTextSharp.text.PageSize.A4);
+            //doc.SetPageSize(iTextSharp.text.PageSize.A4);
+            PdfWriter writer = PdfWriter.GetInstance(doc, ms);
+            doc.Open();
+
+            BaseFont baseFont = BaseFont.CreateFont(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../wwwroot/fonts/Arial.ttf"), BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
+            //Creating paragraph for header  
+            BaseFont bfntHead = baseFont;
+            iTextSharp.text.Font fntHead = new iTextSharp.text.Font(bfntHead, 16, 1, iTextSharp.text.BaseColor.BLACK);
+            Paragraph prgHeading = new Paragraph();
+            prgHeading.Alignment = Element.ALIGN_LEFT;
+            prgHeading.Add(new Chunk("Отчет по заработной плате сотрудника".ToUpper(), fntHead));
+            doc.Add(prgHeading);
+
+            //Adding a line  
+            Paragraph p = new Paragraph(new Chunk(new iTextSharp.text.pdf.draw.LineSeparator(0.0F, 100.0F, iTextSharp.text.BaseColor.BLACK, Element.ALIGN_LEFT, 1)));
+            doc.Add(p);
+
+            //Adding line break  
+            doc.Add(new Chunk("\n", fntHead));
+
+            int projectMinutes = 0;
+            decimal salary = 0;
+            decimal bonus = 0;
+
+            for (int i = 0; i < dtEmployee.Rows.Count; i++)
+            {
+
+                projectMinutes += Convert.ToInt32(dtEmployee.Rows[i]["Минут на проекте"].ToString().Length > 0
+                    ? dtEmployee.Rows[i]["Минут на проекте"]
+                    : 0);
+                salary += Convert.ToDecimal(dtEmployee.Rows[i]["Часть оклада за проект"].ToString().Length > 0
+                    ? dtEmployee.Rows[i]["Часть оклада за проект"]
+                    : 0);
+                bonus += Convert.ToDecimal(dtEmployee.Rows[i]["Сумма (де)премирования"].ToString().Length > 0
+                    ? dtEmployee.Rows[i]["Сумма (де)премирования"]
+                    : 0);
+            }
+
+            salary = decimal.Round(salary, 2);
+            bonus = decimal.Round(bonus, 2);
+
+            Paragraph prg = new Paragraph();
+            prg.Alignment = Element.ALIGN_LEFT;
+            prg.Add(new Chunk("Сотрудник: " + employee.FIO, new iTextSharp.text.Font(baseFont)));
+            doc.Add(prg);
+            prg = new Paragraph();
+
+            var ru = CultureInfo.GetCultureInfo("ru-RU");
+            prg.Add(new Chunk("Месяц: " + ru.DateTimeFormat.MonthNames[settings.StartDate.Value.Month - 1] + " " + settings.StartDate.Value.ToString("dd"), new iTextSharp.text.Font(baseFont)));
+            doc.Add(prg);
+            prg = new Paragraph();
+            prg.Add(new Chunk($"Отработано минут: {projectMinutes} (из {GetWorkingDays(settings.StartDate.Value, settings.EndDate.Value) * 480})", new iTextSharp.text.Font(baseFont)));
+            doc.Add(prg);
+            prg = new Paragraph();
+            prg.Add(new Chunk($"Сумма базы для зарплаты: {salary} (из {employee.Salary} оклада сотрудника)", new iTextSharp.text.Font(baseFont)));
+            doc.Add(prg);
+            prg = new Paragraph();
+            prg.Add(" ");
+            doc.Add(prg);
+
+            //Adding  PdfPTable  
+            PdfPTable table = new PdfPTable(dtEmployee.Columns.Count);
+
+            for (int i = 0; i < dtEmployee.Columns.Count; i++)
+            {
+                string cellText = dtEmployee.Columns[i].ColumnName;
+                PdfPCell cell = new PdfPCell();
+                cell.Phrase = new Phrase(cellText, new iTextSharp.text.Font(baseFont));
+                cell.BackgroundColor = new BaseColor(200, 200, 200);
+                //cell.Phrase = new Phrase(cellText, new Font(Font.FontFamily.TIMES_ROMAN, 10, 1, new BaseColor(grdStudent.HeaderStyle.ForeColor)));  
+                //cell.BackgroundColor = new BaseColor(grdStudent.HeaderStyle.BackColor);  
+                cell.HorizontalAlignment = Element.ALIGN_CENTER;
+                cell.PaddingBottom = 5;
+                table.AddCell(cell);
+            }
+
+            //writing table Data  
+            for (int i = 0; i < dtEmployee.Rows.Count; i++)
+            {
+                for (int j = 0; j < dtEmployee.Columns.Count; j++)
+                {
+                    table.AddCell(new Phrase(dtEmployee.Rows[i][j].ToString(), new iTextSharp.text.Font(baseFont)));
+                }
+            }
+
+            PdfPCell cellSum = new PdfPCell();
+            cellSum.Phrase = new Phrase("Итого:", new iTextSharp.text.Font(baseFont));
+            cellSum.BackgroundColor = new BaseColor(200, 200, 200);
+            cellSum.HorizontalAlignment = Element.ALIGN_RIGHT;
+            table.AddCell(cellSum);
+
+            cellSum = new PdfPCell();
+            cellSum.Phrase = new Phrase(projectMinutes + "", new iTextSharp.text.Font(baseFont));
+            cellSum.BackgroundColor = new BaseColor(200, 200, 200);
+            table.AddCell(cellSum);
+            cellSum = new PdfPCell();
+            cellSum.Phrase = new Phrase(salary + "", new iTextSharp.text.Font(baseFont));
+            cellSum.BackgroundColor = new BaseColor(200, 200, 200);
+            table.AddCell(cellSum);
+            cellSum = new PdfPCell();
+            cellSum.Phrase = new Phrase(bonus + "", new iTextSharp.text.Font(baseFont));
+            cellSum.BackgroundColor = new BaseColor(200, 200, 200);
+            table.AddCell(cellSum);
+
+            table.WidthPercentage = 100;
+            doc.Add(table);
+
+
+            prg = new Paragraph();
+            prg.Alignment = Element.ALIGN_LEFT;
+            prg.Add(new Chunk("Сумма к оплате: " + (salary + bonus), new iTextSharp.text.Font(baseFont)));
+            doc.Add(prg);
+
+            doc.Close();
+
+            byte[] result = ms.ToArray();
+            return result;
+
+        }
+        
+
         public byte[] ExportPDF(ReportSettings settings)
         {
             return exportpdf(GetReportTable(settings), settings.ReportType.GetDescription());
+        }
+
+        public byte[] ExportSalaryPdf(ReportSettings settings)
+        {
+            return exportSalaryPdf(settings, settings.ReportType.GetDescription());
         }
 
         public byte[] ExportExcel(ReportSettings settings)

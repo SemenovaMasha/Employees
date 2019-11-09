@@ -9,6 +9,7 @@ namespace Employees.Models.Dto
     public class EmployeeUserDto
     {
         public string Id { get; set; }
+        public string Mail { get; set; }
         public string FIO { get; set; }
         public DateTime? BirthDate { get; set; }
         public string PassportSeriesNumber { get; set; }

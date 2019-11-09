@@ -38,13 +38,15 @@ namespace Employees.Areas.Identity.Pages.Account
         public class InputModel
         {
             [Required]
+            [Display(Name = "Логин")]
             public string Username { get; set; }
 
             [Required]
             [DataType(DataType.Password)]
+            [Display(Name = "Пароль")]
             public string Password { get; set; }
 
-            [Display(Name = "Remember me?")]
+            [Display(Name = "Запомнить?")]
             public bool RememberMe { get; set; }
         }
 
@@ -76,7 +78,7 @@ namespace Employees.Areas.Identity.Pages.Account
                 var result = await _signInManager.PasswordSignInAsync(Input.Username, Input.Password, Input.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User logged in.");
+                    _logger.LogInformation("Вход выполнен.");
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
@@ -85,12 +87,12 @@ namespace Employees.Areas.Identity.Pages.Account
                 }
                 if (result.IsLockedOut)
                 {
-                    _logger.LogWarning("User account locked out.");
+                    _logger.LogWarning("Выход выполнен.");
                     return RedirectToPage("./Lockout");
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    ModelState.AddModelError(string.Empty, "Ошибка при попытке входа");
                     return Page();
                 }
             }

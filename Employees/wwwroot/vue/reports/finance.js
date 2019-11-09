@@ -1,4 +1,5 @@
-﻿Vue.component('analitics',
+﻿
+Vue.component('finance',
 {
     template: `
     <div>
@@ -7,34 +8,34 @@
             <b-form-select v-model="reportType" :options="reportTypes" class="col-sm-8" disable="true"></b-form-select>
         </div>              
 
-        <div class="form-group row" v-if="reportType!='OverTime'">
+        <div class="form-group row" v-if="reportType!='Salary'">
             <label for="project" class="col-sm-2 col-form-label ">Проект</label>         
             <v-select placeholder=" " v-model="project" as="name::id" :from="allProjects" tagging class="col-sm-4" ></v-select>  
-            <div class="invalid-feedback col-sm-8 offset-sm-2"" style="display:block" v-if="(reportType == 'MatchEstimate'||reportType == 'NotMatchEstimate') && !project">Для выбранного типа отчета необходимо выбрать проект</div>    
 
         </div>              
 
-        <div class="form-group row"  v-if="reportType!='MatchEstimate' && reportType!='NotMatchEstimate' && reportType!='OverTime'">
+        <div class="form-group row" >
             <label for="user" class="col-sm-2 col-form-label ">Сотрудник</label>         
-            <v-select placeholder=" " v-model="user" as="fio::id" :from="allUsers" tagging class="col-sm-4" v-if="(project && (project.managerId==currentUser.id))"></v-select> 
+            <v-select placeholder=" " v-model="user" as="fio::id" :from="allUsers" tagging class="col-sm-4" v-if="(reportType=='Salary' ||(project && (project.managerId==currentUser.id)))"></v-select> 
             <b-form-input readonly class="col-sm-4" :value="user ? user.fio :''" v-else></b-form-input> 
+            <div class="invalid-feedback col-sm-8 offset-sm-2"" style="display:block" v-if="(reportType == 'Salary') && !user">Для выбранного типа отчета необходимо выбрать сотрудника</div>    
+
         </div>  
 
         <div class="form-group row">
             <label for="user" class="col-sm-1 col-form-label ">Период</label>     
-            <label for="user" class="col-form-label ">c</label>  
-             <date-picker name="date" v-model="startDate" lang="ru" format="DD.MM.YYYY" class="col-sm-2" placeholder=" "></date-picker>
-               
-            <label for="user" class="col-form-label ">по</label>  
-            <date-picker name="date" v-model="endDate" lang="ru" format="DD.MM.YYYY" class="col-sm-2" placeholder=" "></date-picker>
+            <date-picker type="month" name="date" v-model="monthDate" lang="ru" format="MM.YYYY" class="col-sm-2" placeholder=" "></date-picker> 
+            <div class="col-sm-9 "></div>
+            <div class="invalid-feedback col-sm-8 offset-sm-1"" style="display:block" v-if="reportType=='Salary'&&!monthDate">Выберите месяц</div>    
+
         </div>  
 
         <div class="form-group row">
-            <b-button  @click="formReport()"  variant="success" class="col-sm-2">Сформировать</b-button>
+            <b-button  @click="formReport()"  variant="success" class="col-sm-2"  v-if="reportType!='Salary'">Сформировать</b-button>
             <b-button-group style="margin-left: 10px;">
                 <b-dropdown right text="Экспорт" variant="info">
                   <b-dropdown-item  @click="exportPdf()" >PDF</b-dropdown-item>
-                  <b-dropdown-item  @click="exportExcel()" >Excel</b-dropdown-item>
+                  <b-dropdown-item  @click="exportExcel()"  v-if="reportType!='Salary'">Excel</b-dropdown-item>
                 </b-dropdown>
               </b-button-group>
         </div>
@@ -42,7 +43,7 @@
            
         </div>
 
-         <b-table striped show-empty :items="reportTableData" >
+         <b-table striped show-empty :items="reportTableData"   v-if="reportType!='Salary'">
              <template v-slot:empty="scope"><div style="text-align: center;">Нет записей для отображения</div></template>
 
               <template v-slot:head()="data">{{data.label.charAt(0).toUpperCase() + data.label.slice(1)}}</template>
@@ -57,26 +58,22 @@
             allProjects: [],
             allUsers: [],
 
-            reportType: 'Labors',
+            reportType: 'Salary',
             user: '',
             userId: '',
             project: '',
             projectId: '',
             startDate: moment().startOf('month'),
             endDate: moment().endOf('month'),
-            monthDate: null,
+            monthDate: moment().startOf('month'),
 
             reportTypes: [],
             allReportTypes: [
-                { value: 'Labors', text: 'Отчет «Трудозатраты» сотрудников' },
-                { value: 'MatchEstimate', text: 'Отчет по сотрудникам, укладывающимся в оценочное время' },
-                { value: 'NotMatchEstimate', text: 'Отчет по сотрудникам, не укладывающимся в оценочное время' },
-                { value: 'OverTime', text: 'Отчет по сотрудникам, отработавшим сверх нормы' },
-                { value: 'TaskTypes', text: 'Распределение времени сотрудника по типам задач' },
-                { value: 'TaskTimes', text: 'Отчет об оценочном и фактическом затраченном времени на задачу' },
+                { value: 'Salary', text: 'Итоговый отчет по заработной плате сотрудника за определенный месяц' },
+                { value: 'Bonus', text: 'Отчет о сумме премирования' },
             ],
             employeeReportTypes: [
-                { value: 'Labors', text: 'Отчет «Трудозатраты» сотрудников' },
+                { value: 'Salary', text: 'Итоговый отчет по заработной плате сотрудника за определенный месяц' },
             ],
             reportTableData: [],
             isManager: false,
@@ -110,23 +107,15 @@
                     this.reportTypes = this.allReportTypes
                 else {
                     this.reportTypes = this.employeeReportTypes
-                    this.reportType = 'Labors'
+                    this.reportType = 'Salary'
                 }
             }
         },
         'reportType': function (newVal, oldVal) {
-            if (this.reportType != 'Labors') {
-                axios.get("/projects/GetProjectByManager", {
-                    params: {
-                        id: this.currentUser.id
-                    }
-                }).then(response => {
-                    this.allProjects = response.data
-                    if (this.project) {
-                        if (this.allProjects.filter(item => { return item.id != this.project.id }).lenght == 0) {
-                            this.project = ''
-                        }
-                    }                    
+            if (this.reportType != 'Salary') {
+                axios.get("/Employees/GetAll").then(response => {
+                    this.allUsers = response.data
+
                 })
             } else {
                 axios.get("/projects/GetAllMine").then(response => {
@@ -165,41 +154,46 @@
                 else
                     this.reportTypes = this.employeeReportTypes
             })
+        axios.get("/Employees/GetAll").then(response => {
+            this.allUsers = response.data
 
+        })
     },
     methods: {
+        getSettings() {
+            //console.log(moment(this.monthDate).endOf('month'))
+            return {
+                reportType: this.reportType,
+                userId: this.user ? this.user.id : '',
+                projectId: this.project ? this.project.id : -1,
+                startDate: this.monthDate?new Date(moment(this.monthDate).startOf('month')):null,
+                endDate: this.monthDate?new Date(moment(this.monthDate).endOf('month')):null,
+            };
+        },
         formReport() {
-            if ((this.reportType == 'MatchEstimate' || this.reportType == 'NotMatchEstimate') && !this.project)
+            if ((this.reportType == 'Salary') && !this.user)
                 return
 
             axios.get("/reports/GetReportTable", {
-                params: {
-                    reportType: this.reportType,
-                    userId: this.user ? this.user.id : '',
-                    projectId: this.project ? this.project.id : -1,
-                    startDate: new Date(this.startDate),
-                    endDate: new Date(this.endDate),
-                }
+                params: this.getSettings()
             }).then(response => {
                 this.reportTableData = response.data
             })
         },
         exportPdf() {
-            axios.post("/reports/exportPdf",
-                {
-                    reportType: this.reportType,
-                    userId: this.user ? this.user.id : '',
-                    projectId: this.project ? this.project.id : -1,
-                    startDate: new Date(this.startDate),
-                    endDate: new Date(this.endDate),
-                },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/pdf'
-                    },
-                    responseType: "blob"
-                }).then((response) => {
+            if (this.reportType == 'Salary' &&( !this.monthDate || !this.user))
+                return
+
+            if (this.reportType != 'Salary') {
+                axios.post("/reports/exportPdf",
+                    this.getSettings(),
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/pdf'
+                        },
+                        responseType: "blob"
+                    }).then((response) => {
                     var filename = this.allReportTypes.filter(item => { return item.value == this.reportType })[0].text;
 
                     var blob = new Blob([response.data], { type: "application/pdf" });
@@ -208,16 +202,29 @@
                     link.download = filename + moment(new Date()).format(" DD-MM-YYYY") + ".pdf";
                     link.click();
                 });
+            } else {
+                axios.post("/reports/exportSalaryPdf",
+                    this.getSettings(),
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/pdf'
+                        },
+                        responseType: "blob"
+                    }).then((response) => {
+                    var filename = this.allReportTypes.filter(item => { return item.value == this.reportType })[0].text;
+
+                    var blob = new Blob([response.data], { type: "application/pdf" });
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = filename + moment(new Date()).format(" DD-MM-YYYY") + ".pdf";
+                    link.click();
+                });
+            }
         },
         exportExcel() {
             axios.post("/reports/exportExcel",
-                {
-                    reportType: this.reportType,
-                    userId: this.user ? this.user.id : '',
-                    projectId: this.project ? this.project.id : -1,
-                    startDate: new Date(this.startDate),
-                    endDate: new Date(this.endDate),
-                },
+                this.getSettings(),
                 {
                     headers: {
                         'Content-Type': 'application/json',
@@ -237,10 +244,12 @@
     },
     components: {
         vSelect: VueSelect.vSelect,
+        //VueMonthlyPicker
+        //monthPicker: VueMonthlyPicker
     },
 })
 
 new Vue({
-    el: '#Analitics',
-    template: '<analitics></analitics>'
+    el: '#Finance',
+    template: '<finance></finance>'
 });

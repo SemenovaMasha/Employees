@@ -45,6 +45,12 @@ namespace Employees.Controllers
         }
 
         [HttpPost]
+        public IActionResult ExportSalaryPdf([FromBody]ReportSettings settings)
+        {
+            return File(_reportsService.ExportSalaryPdf(settings), "application/pdf");
+        }
+
+        [HttpPost]
         public IActionResult ExportExcel([FromBody]ReportSettings settings)
         {
             return File(_reportsService.ExportExcel(settings), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

@@ -22,6 +22,15 @@
         </div>
 
         <div class="form-group row ">
+          <label for="fio" class="col-sm-4 col-form-label required">Адрес электронной почты</label>
+          <b-form-input class="col-sm-8" type="email"
+            id="mail"
+            v-model="currentItem.mail"
+            required        
+          ></b-form-input>     
+        </div>
+
+        <div class="form-group row ">
           <label for="passportSeriesNumber" class="col-sm-4 col-form-label required">Номер и серия паспорта</label>
           <b-form-input class="col-sm-8"
             id="passportSeriesNumber"
@@ -113,6 +122,7 @@
                 position: '',
                 positionId: -1,
                 fio: "",
+                mail: "",
                 education: "",
                 birthDate: null,
                 passportGiven: "",
@@ -166,6 +176,7 @@
                 this.currentItem.id = response.data.id;
                 this.currentItem.positionId = response.data.positionId;
                 this.currentItem.fio = response.data.fio;
+                this.currentItem.mail = response.data.mail;
                 this.currentItem.education = response.data.education;
                 this.currentItem.birthDate = response.data.birthDate?new Date(response.data.birthDate):'';
                 this.currentItem.passportGiven = response.data.passportGiven;
