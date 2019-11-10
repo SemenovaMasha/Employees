@@ -72,7 +72,10 @@
                                 <li> <a class="nav-link text-dark dropdown-item" asp-area="" asp-controller="Reports" asp-action="Finance">Финансы</a></li>
                             </ul>
                         </li>
-                        @if (UserManager.IsInRoleAsync(UserManager.GetUserAsync(User).Result, RolesNames.Admin).Result)
+                        @{
+                            var user = UserManager.GetUserAsync(User).Result;
+                        }
+                        @if (user!=null && UserManager.IsInRoleAsync(user, RolesNames.Admin).Result)
                         {
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
