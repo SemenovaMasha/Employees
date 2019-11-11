@@ -31,12 +31,13 @@
 
         <div class="form-group row">
             <b-button  @click="formReport()"  variant="success" class="col-sm-2">Сформировать</b-button>
-            <b-button-group style="margin-left: 10px;">
+            <b-button-group style="margin-left: 10px;; margin-right: 10px;">
                 <b-dropdown right text="Экспорт" variant="info">
                   <b-dropdown-item  @click="exportPdf()" >PDF</b-dropdown-item>
                   <b-dropdown-item  @click="exportExcel()" >Excel</b-dropdown-item>
                 </b-dropdown>
               </b-button-group>
+            <b-button  @click="chooseEmails()"  variant="success" class="col-sm-2">Отправить на почту</b-button>
         </div>
         <div class="form-group row">
            
@@ -48,6 +49,55 @@
               <template v-slot:head()="data">{{data.label.charAt(0).toUpperCase() + data.label.slice(1)}}</template>
         </b-table>
 
+
+        <b-modal
+          id="add-modal"     
+          title="Отправка на почту"
+          @ok="chooseConfirm"
+            size="xl" 
+        >
+          <template v-slot:modal-ok="props">
+            Добавить
+          </template>
+          <template v-slot:modal-cancel="props">
+            Отмена
+          </template>
+     
+            <b-table striped show-empty :items="filteredAdd"  :fields="addModalFields">
+
+               <template v-slot:cell(fio)="props">    
+                   <a :href="'/employees/details?id='+props.item.id">{{props.item.fio}} </a>
+                  </template>
+
+                  <template v-slot:cell(actions)="props"> 
+                    <b-button size="sm"  @click="removeFromProject(props.item, props.index, $event.target)" class="mr-2"  variant="outline-danger" >
+                      <i class="fas fa-trash-alt"></i>
+                    </b-button>
+                  </template>
+              
+                  <template v-slot:top-row="props">
+                    <td v-for="field in props.fields" :key="field.key">
+                      <b-form-input v-model="addFilters[field.key]" size="sm" :placeholder="field.label"  v-if="addFilters[field.key] != undefined">
+                      </b-form-input>      
+                    </td>
+                  </template>  
+
+                  <template v-slot:table-colgroup="scope">
+                    <col
+                      v-for="field in scope.fields"
+                      :key="field.key"
+                      :style="{ width: field.width+'%' }"
+                    >
+                  </template>
+
+                <template v-slot:cell(checkbox)="row">
+                    <b-form-checkbox v-model="row.item.checkbox" >
+                  
+                    </b-form-checkbox>
+                  </template>
+
+                </b-table>
+        </b-modal>
     
     </div>
     `,
@@ -80,6 +130,44 @@
             ],
             reportTableData: [],
             isManager: false,
+            addModalFields: [
+                {
+                    key: 'checkbox',
+                    label: ' ',
+                    // sortable: true,
+                    width: 1
+                },
+                {
+                    key: 'fio',
+                    label: 'ФИО',
+                    sortable: true,
+                    width: 14
+                },
+                {
+                    key: 'mail',
+                    label: 'Эл. почта',
+                    sortable: true,
+                    width: 4
+                },
+                {
+                    key: 'position',
+                    label: 'Должность',
+                    sortable: true,
+                    width: 4
+                },
+                {
+                    key: 'role',
+                    label: 'Роль',
+                    sortable: true,
+                    width: 4
+                },
+            ],
+            usersToAdd: [],
+            addFilters: {
+                fio: '',
+                position: '',
+                role: '',
+            },
         }
     },
     watch: {
@@ -142,7 +230,13 @@
         },
     },
     computed: {
-
+        filteredAdd() {
+            const filtered = this.usersToAdd.filter(item => {
+                return Object.keys(this.addFilters).every(key =>
+                    String(item[key]).toLowerCase().includes(this.addFilters[key].toLowerCase()))
+            })
+            return filtered.length > 0 ? filtered : []
+        }
     },
     mounted() {
         axios.get("/employees/GetCurrentUser").then(response => {
@@ -168,6 +262,34 @@
 
     },
     methods: {
+        chooseEmails(item, key) {
+            this.$bvModal.show('add-modal')
+
+            axios.get("/reports/GetUsersWithEmails")
+                .then(response => {
+                    this.usersToAdd = response.data
+                    this.usersToAdd.forEach(function (item) {
+                        item.checkbox = false;
+                    });
+                })
+        },
+        chooseConfirm() {
+            debugger
+            axios.post("/reports/SendMails", JSON.parse(JSON.stringify({
+                settings: {
+                    reportType: this.reportType,
+                    userId: this.user ? this.user.id : '',
+                    projectId: this.project ? this.project.id : -1,
+                    startDate: new Date(this.startDate),
+                    endDate: new Date(this.endDate),
+                },
+                userIds: this.usersToAdd.map(x=>x.id)
+                }))
+            )
+                .then(response => {
+                    console.log("отправлено")
+                })
+        },
         formReport() {
             if ((this.reportType == 'MatchEstimate' || this.reportType == 'NotMatchEstimate') && !this.project)
                 return

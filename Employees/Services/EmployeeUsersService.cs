@@ -69,6 +69,11 @@ namespace Employees.Services
             return _context.Users.Include(x => x.Position).ToList().Select(x => Map(x)).ToList();
         }
 
+        public List<EmployeeUserDto> GetUsersWithEmails()
+        {
+            return _context.Users.Include(x => x.Position).Where(x=>!string.IsNullOrEmpty(x.Email)).ToList().Select(x => Map(x)).ToList();
+        }
+
         public List<EmployeeUserDto> GetAllManagers()
         {
             return (_userManager.GetUsersInRoleAsync(RolesNames.Admin).Result.ToList()

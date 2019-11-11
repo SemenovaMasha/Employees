@@ -18,13 +18,15 @@ namespace Employees.Controllers
     {
         private ReportsService _reportsService;
         private UserManager<EmployeeUser> _userManager;
+        private EmployeeUsersService _employeeService;
 
         private EmployeeUser CurrentUser => _userManager.GetUserAsync(HttpContext.User).Result;
 
-        public ReportsController(ReportsService _reportsService, UserManager<EmployeeUser> _userManager)
+        public ReportsController(ReportsService _reportsService, UserManager<EmployeeUser> _userManager, EmployeeUsersService _employeeService)
         {
             this._reportsService = _reportsService;
             this._userManager = _userManager;
+            this._employeeService = _employeeService;
         }
 
         public DataTable GetReportTable(ReportSettings reportSettings)
@@ -54,6 +56,18 @@ namespace Employees.Controllers
         public IActionResult ExportExcel([FromBody]ReportSettings settings)
         {
             return File(_reportsService.ExportExcel(settings), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        }
+
+        public List<EmployeeUserDto> GetUsersWithEmails()
+        {
+            return _employeeService.GetUsersWithEmails();
+        }
+
+        [HttpPost]
+        public ActionResult SendMails([FromBody]EmailSendDto emailSendDto)
+        {
+
+            return Ok();
         }
     }
 }
