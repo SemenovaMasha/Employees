@@ -98,6 +98,22 @@
 
                 </b-table>
         </b-modal>
+
+         <b-alert variant="success"
+             :show="successDismissCountDown"
+            dismissible
+            @dismissed="successDismissCountDown=0"
+            @dismiss-count-down="successCountDownChanged"
+            >
+            Письма успешно отправлены
+          </b-alert>
+
+        <b-alert variant="danger" dismissible fade :show="errorAlertShow">
+            <h6 class="alert-heading">Ошибка</h6>
+            <p style="margin-bottom: 0px">
+              {{errorMessage}}
+            </p>
+          </b-alert>
     
     </div>
     `,
@@ -168,6 +184,11 @@
                 position: '',
                 role: '',
             },
+            successAlertShow: false,
+            successDismissSecs: 3,
+            successDismissCountDown: 0,
+            errorMessage: '',
+            errorAlertShow:false
         }
     },
     watch: {
@@ -273,8 +294,8 @@
                     });
                 })
         },
-        chooseConfirm() {
-            debugger
+        chooseConfirm(evt) {
+            evt.preventDefault()
             axios.post("/reports/SendMails", JSON.parse(JSON.stringify({
                 settings: {
                     reportType: this.reportType,
@@ -283,11 +304,18 @@
                     startDate: new Date(this.startDate),
                     endDate: new Date(this.endDate),
                 },
-                userIds: this.usersToAdd.map(x=>x.id)
+                userIds: this.usersToAdd.filter(item => { return item.checkbox }).map(x=>x.id)
                 }))
             )
                 .then(response => {
-                    console.log("отправлено")
+                    if (!response.data.error) {
+                        this.$bvModal.hide('add-modal');
+                        this.successShowAlert();
+                    } else {
+                        this.$bvModal.hide('add-modal');
+                        this.errorMessage = response.data.error
+                        this.errorAlertShow = true;
+                    }
                 })
         },
         formReport() {
@@ -356,6 +384,12 @@
                     link.click();
                 });
         },
+        successCountDownChanged(dismissCountDown) {
+            this.successDismissCountDown = dismissCountDown
+        },
+        successShowAlert() {
+            this.successDismissCountDown = this.successDismissSecs
+        }
     },
     components: {
         vSelect: VueSelect.vSelect,

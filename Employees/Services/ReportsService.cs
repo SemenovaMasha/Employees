@@ -26,10 +26,12 @@ namespace Employees.Services
         private ApplicationDbContext _context;
         private UserManager<EmployeeUser> _userManager;
         private readonly IConfiguration configuration;
+        private EmailService _emailService;
 
-        public ReportsService(ApplicationDbContext _context, UserManager<EmployeeUser> _userManager, IConfiguration config)
+        public ReportsService(ApplicationDbContext _context, UserManager<EmployeeUser> _userManager, IConfiguration config, EmailService _emailService)
         {
             this._context = _context;
+            this._emailService = _emailService;
             this._userManager = _userManager;
             configuration = config; ;
         }
@@ -521,7 +523,6 @@ select top(1) (b.BonusPercent*1.0/100) as bonusPercent, b.Coef as coef from (
 
         }
         
-
         public byte[] ExportPDF(ReportSettings settings)
         {
             return exportpdf(GetReportTable(settings), settings.ReportType.GetDescription());
@@ -554,6 +555,29 @@ select top(1) (b.BonusPercent*1.0/100) as bonusPercent, b.Coef as coef from (
 
                 return workbookBytes;
             }
+        }
+
+        public bool SendMails(EmailSendDto emailSendDto, out string error)
+        {
+            List<Attach> attachs = new List<Attach>();
+            string subject = emailSendDto.settings.ReportType.GetDescription();
+            List<string> userMails = new List<string>();
+            if (emailSendDto.settings.ReportType == ReportType.Salary)
+            {
+                attachs.Add(new Attach() { name = emailSendDto.settings.ReportType.GetDescription() + ".pdf", file = ExportSalaryPdf(emailSendDto.settings) });
+            }
+            else
+            {
+                attachs.Add(new Attach() { name = emailSendDto.settings.ReportType.GetDescription() + ".pdf", file = ExportPDF(emailSendDto.settings) });
+                attachs.Add(new Attach() { name = emailSendDto.settings.ReportType.GetDescription() + ".xlsx", file = ExportExcel(emailSendDto.settings) });
+            }
+
+            foreach(var userId in emailSendDto.userIds)
+            {
+                var u = _context.Users.Where(x => x.Id == userId).FirstOrDefault();
+                userMails.Add(u.Email);
+            }
+            return _emailService.SendReport(attachs, userMails, out error, subject: subject);
         }
 
     }

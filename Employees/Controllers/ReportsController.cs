@@ -66,8 +66,15 @@ namespace Employees.Controllers
         [HttpPost]
         public ActionResult SendMails([FromBody]EmailSendDto emailSendDto)
         {
-
-            return Ok();
+            string error = "";
+            if(_reportsService.SendMails(emailSendDto, out error))
+            {
+                return Ok();
+            }
+            else
+            {
+                return new JsonResult(new { error });
+            }
         }
     }
 }

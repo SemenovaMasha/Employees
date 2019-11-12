@@ -101,3 +101,9 @@ header ul.navbar-nav li.nav-item.dropdown ul > li > a {
 header > nav ul.navbar-nav > li > a:hover {
     color: #78c2ad !important;
 }
+.container .alert {
+    top: 60px;
+    position: absolute;
+    right: 20%;
+    max-width: 20%;
+}

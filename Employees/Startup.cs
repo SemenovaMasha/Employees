@@ -58,6 +58,7 @@ namespace Employees
             services.AddScoped<ProjectService>();
             services.AddScoped<LaborsService>();
             services.AddScoped<ReportsService>();
+            services.AddScoped<EmailService>();
 
 
             services.AddSingleton<IConfiguration>(Configuration);
