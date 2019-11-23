@@ -153,6 +153,11 @@
                       <v-select  placeholder=" " v-model="currentItem.project" as="name::id" :from="allProjects" tagging class="col-sm-8" ></v-select>              
                       <div class="invalid-feedback col-sm-8 offset-sm-4"" style="display:block" v-if="!currentItem.project || (currentItem.project.name == ' ')">Выберите проект</div>
                 </div>
+                 <div class="form-group row ">
+                      <label for="taskmodel" class="col-sm-4 col-form-label required">Задача</label>         
+                      <v-select  placeholder=" " v-model="currentItem.taskmodel" as="taskNumber::id" :from="allTaskmodels" tagging class="col-sm-8" ></v-select>              
+                      <div class="invalid-feedback col-sm-8 offset-sm-4"" style="display:block" v-if="!currentItem.taskmodel || (currentItem.taskmodel.name == ' ')">Выберите задачу</div>
+                </div>
 
                <div class="form-group row ">
                   <label for="taskNumber" class="col-sm-4 col-form-label required">Номер задачи</label>
@@ -160,6 +165,7 @@
                     id="taskNumber"
                     v-model="currentItem.taskNumber"
                     required       
+                    readonly
                   ></b-form-input>     
                       <div class="invalid-feedback col-sm-8 offset-sm-4"" style="display:block" v-if="!taskNumberFilled">Заполните номер задачи</div>
                 </div>
@@ -167,19 +173,26 @@
                   <label for="taskName" class="col-sm-4 col-form-label">Наименование</label>
                   <b-form-input class="col-sm-8"
                     id="taskName"
-                    v-model="currentItem.taskName"
+                    v-model="currentItem.taskName"   
+                    readonly
                   ></b-form-input>     
                 </div>
 
                 <div class="form-group row ">
                       <label for="type" class="col-sm-4 col-form-label required">Тип задачи</label>         
-                      <v-select  placeholder=" " v-model="currentItem.type" as="name::id" :from="allTypes" tagging class="col-sm-8"></v-select>              
-                      <div class="invalid-feedback col-sm-8 offset-sm-4"" style="display:block" v-if="!currentItem.type || (currentItem.type.name == ' ')">Выберите тип</div>
+                    <b-form-input class="col-sm-8"
+                        id="typeName"
+                        v-model="currentItem.type.name"   
+                        readonly
+                      ></b-form-input>  
                 </div>
                 <div class="form-group row ">
                       <label for="position" class="col-sm-4 col-form-label required">Приотритет задачи</label>         
-                      <v-select  placeholder=" " v-model="currentItem.priority" as="name::id" :from="allPrioritys" tagging class="col-sm-8"></v-select>              
-                      <div class="invalid-feedback col-sm-8 offset-sm-4"" style="display:block" v-if="!currentItem.priority || (currentItem.priority.name == ' ')">Выберите приотритет</div>
+                      <b-form-input class="col-sm-8"
+                        id="priority"
+                        v-model="currentItem.priority.name"   
+                        readonly
+                      ></b-form-input> 
                 </div>
 
                 <div class="form-group row " >
@@ -289,6 +302,8 @@
                 id: -1,
                 project: '',
                 projectId: -1,
+                taskmodel: '',
+                taskmodelId: -1,
                 taskNumber: '',
                 taskName: '',
                 type: '',
@@ -303,24 +318,58 @@
                 date: null,
             },
             allProjects: [],
+            allTaskmodels: [],
             allTypes: [],
             allPrioritys: [],
             allUsers: [],
             editKey:-1
     }
         },
-    watch: {
-        'currentItem.project': function (newVal, oldVal) {
-            axios.get("/projects/GetProjectUsers",
-                    {
-                        params: {
-                            id: this.currentItem.project.id
-                        }
+        watch: {
+            'currentItem.project': function (newVal, oldVal) {
+                axios.get("/projects/GetProjectUsers",
+                        {
+                            params: {
+                                id: this.currentItem.project.id
+                            }
+                        })
+                    .then(response => {
+                        this.allUsers = response.data
                     })
-                .then(response => {
-                    this.allUsers = response.data
-                })
-        },
+            },
+            'currentItem.taskmodel': function (newVal, oldVal) {
+                if (this.currentItem.taskmodel && this.currentItem.taskmodel.id) {
+                    axios.get("/taskModels/get?id=" + this.currentItem.taskmodel.id)
+                        .then(response => {
+                            this.allUsers = response.data
+                            this.currentItem.taskNumber = response.data.taskNumber;
+                            this.currentItem.taskName = response.data.taskName;
+
+                            if (response.data.typeName) {
+                                this.currentItem.type = {
+                                    id: response.data.type,
+                                    name: response.data.typeName
+                                };
+                            } else {
+                                this.currentItem.type = {
+                                    id: -1,
+                                    name: ' '
+                                };
+                            }
+                            if (response.data.priorityName) {
+                                this.currentItem.priority = {
+                                    id: response.data.priority,
+                                    name: response.data.priorityName
+                                };
+                            } else {
+                                this.currentItem.priority = {
+                                    id: -1,
+                                    name: ' '
+                                };
+                            }
+                        })
+                }
+            },
         'allLaborsRadio': function (newVal, oldVal) {
             this.reloadTable();
         },
@@ -377,7 +426,11 @@
                 }
             }).then(response => {
                 this.allUsers = response.data
-            })
+                })
+
+        axios.get("/taskModels/GetAllMine").then(response => {
+            this.allTaskmodels = response.data
+        })
     },
         methods: {
             reloadTable() {
@@ -473,6 +526,17 @@
                             name: ' '
                         };
                     }
+                    if (response.data.taskModel) {
+                        this.currentItem.taskmodel = {
+                            id: response.data.taskModelId,
+                            taskNumber: response.data.taskModel
+                        };
+                    } else {
+                        this.currentItem.taskmodel = {
+                            id: -1,
+                            taskNumber: ' '
+                        };
+                    }
                     if (response.data.typeName) {
                         this.currentItem.type = {
                             id: response.data.type,
@@ -520,6 +584,9 @@
             if (this.currentItem.project&& this.currentItem.date &&                
                 this.currentItem.project != ' ' &&
                 this.currentItem.project.id != -1 &&
+                this.currentItem.taskmodel && 
+                this.currentItem.taskmodel != ' ' &&
+                this.currentItem.taskmodel.id != -1 &&
                 this.currentItem.type &&
                 this.currentItem.priority &&
                 this.currentItem.user &&
@@ -527,12 +594,14 @@
                 $.trim(this.currentItem.taskNumber)
             ) {
                 this.currentItem.projectId = this.currentItem.project.id
+                this.currentItem.project = this.currentItem.project.name
                 this.currentItem.type = this.currentItem.type.id
                 this.currentItem.priority = this.currentItem.priority.id
                 this.currentItem.userId = this.currentItem.user.id
-                this.currentItem.project = this.currentItem.project.name
                 this.currentItem.user = this.currentItem.user.fio
                 this.currentItem.date.setHours(this.currentItem.date.getHours() + 11);
+                this.currentItem.taskmodelId = this.currentItem.taskmodel.id
+                this.currentItem.taskmodel = this.currentItem.taskmodel.taskNumber
 
                 if (this.currentItem.id == -1) {
                     axios.post("/labors/Add", Object.assign({}, this.currentItem))

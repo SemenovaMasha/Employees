@@ -4,14 +4,16 @@ using Employees.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Employees.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20191123140354_tasks")]
+    partial class tasks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -129,8 +131,6 @@ namespace Employees.Data.Migrations
 
                     b.Property<long>("ProjectId");
 
-                    b.Property<long?>("TaskModelId");
-
                     b.Property<string>("TaskName");
 
                     b.Property<string>("TaskNumber");
@@ -142,8 +142,6 @@ namespace Employees.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ProjectId");
-
-                    b.HasIndex("TaskModelId");
 
                     b.HasIndex("UserId");
 
@@ -219,8 +217,6 @@ namespace Employees.Data.Migrations
                     b.Property<int>("Priority");
 
                     b.Property<long>("ProjectId");
-
-                    b.Property<int>("Status");
 
                     b.Property<string>("TaskDescription");
 
@@ -389,10 +385,6 @@ namespace Employees.Data.Migrations
                         .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("Employees.Models.TaskModel", "TaskModel")
-                        .WithMany()
-                        .HasForeignKey("TaskModelId");
 
                     b.HasOne("Employees.Models.EmployeeUser", "User")
                         .WithMany()

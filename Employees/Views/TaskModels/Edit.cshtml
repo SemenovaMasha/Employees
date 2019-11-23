@@ -1,0 +1,13 @@
+﻿@model long
+@{
+    ViewData["Title"] = "Задача";
+}
+
+
+<div id="Taskmodel">
+    <taskmodelEdit taskmodelid="@Model"></taskmodelEdit>
+</div>
+
+@section Scripts{
+    <script type="text/javascript" src="~/vue/taskmodels/edit.js"></script>
+}   

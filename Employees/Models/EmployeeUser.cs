@@ -19,6 +19,8 @@ namespace Employees.Models
         public string AdditionalInfo { get; set; }
         public decimal Salary { get; set; }
         public List<ProjectUser> ProjectUsers { get; set; }
+        public List<TaskUser> TaskUsers { get; set; }
+
     }
 
     public static class RolesNames

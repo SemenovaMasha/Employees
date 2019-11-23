@@ -61,6 +61,9 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Projects" asp-action="Index">Проекты</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="TaskModels" asp-action="Index">Задачи</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Labors" asp-action="Index">Трудозатраты</a>
                         </li>
                         <li class="nav-item dropdown">
@@ -75,7 +78,7 @@
                         @{
                             var user = UserManager.GetUserAsync(User).Result;
                         }
-                        @if (user!=null && UserManager.IsInRoleAsync(user, RolesNames.Admin).Result)
+                        @if (user != null && UserManager.IsInRoleAsync(user, RolesNames.Admin).Result)
                         {
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

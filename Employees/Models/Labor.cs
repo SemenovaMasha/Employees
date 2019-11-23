@@ -15,6 +15,8 @@ namespace Employees.Models
         public Project Project { get; set; }
         public long ProjectId { get; set; }
         public string TaskNumber { get; set; }
+        public TaskModel TaskModel { get; set; }
+        public long? TaskModelId { get; set; }
         public string TaskName { get; set; }
         public TaskType Type { get; set; }
         public TaskPriority Priority { get; set; }
@@ -32,6 +34,8 @@ namespace Employees.Models
         [Description("Разработка")] Implementation = 1,
 
         [Description("Тестирование")] Testing = 2,
+
+        [Description("Аналитика")] Analitics = 3,
     }
 
     public enum TaskPriority
@@ -41,6 +45,21 @@ namespace Employees.Models
         [Description("Высокий")] High = 1,
 
         [Description("Низкий")] Low = 2,
+
+        [Description("Авария")] Critical = 3,
+    }
+
+    public enum TaskComplexity
+    {
+        [Description("1")] One = 0,
+
+        [Description("2")] Two = 1,
+
+        [Description("3")] Three = 2,
+
+        [Description("4")] Four = 3,
+
+        [Description("5")] Five = 4,
     }
 
     public static class Enums

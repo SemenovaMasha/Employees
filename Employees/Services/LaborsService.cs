@@ -43,6 +43,7 @@ namespace Employees.Services
             labor.Note = dto.Note;
             labor.UserId = dto.UserId;
             labor.Date = dto.Date;
+            labor.TaskModelId = dto.TaskModelId;
 
             return labor;
         }
@@ -66,6 +67,8 @@ namespace Employees.Services
                 PriorityName = model.Priority.GetDescription(),
                 TypeName = model.Type.GetDescription(),
                 Date=model.Date,
+                TaskModelId = model.TaskModelId??-1,
+                TaskModel = model.TaskModel?.TaskNumber,
             };
         }
 
@@ -74,6 +77,7 @@ namespace Employees.Services
             return _context.Labors
                 .Include(x => x.Project)
                 .Include(x => x.User)
+                .Include(x => x.TaskModel)
                 .Where(x => x.UserId == id && ((startDate != null && endDate != null) ? x.Date <= endDate && x.Date >= startDate : true))
                 .ToList().Select(x => Map(x)).ToList();
         }
@@ -83,6 +87,7 @@ namespace Employees.Services
             return _context.Labors
                 .Include(x => x.Project)
                 .Include(x => x.User)
+                .Include(x => x.TaskModel)
                 .Where(x => x.Project.ManagerId == id && ((startDate != null && endDate != null) ? x.Date <= endDate && x.Date >= startDate : true))
                 .ToList().Select(x => Map(x)).ToList();
         }
@@ -91,6 +96,7 @@ namespace Employees.Services
         {
             return _context.Labors
                 .Include(x=>x.Project)
+                .Include(x => x.TaskModel)
                 .Include(x=>x.User)
                 .Where(x => (startDate != null && endDate != null) ? x.Date <= endDate && x.Date >= startDate : true)
                 .ToList().Select(x => Map(x)).ToList();
@@ -141,6 +147,7 @@ namespace Employees.Services
                 return Map(_context.Labors
                     .Include(x => x.Project)
                     .Include(x => x.User)
+                    .Include(x => x.TaskModel)
                     .FirstOrDefault(x => x.Id == id));
             }
         }

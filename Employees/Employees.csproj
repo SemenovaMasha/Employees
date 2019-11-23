@@ -13,6 +13,10 @@
     <Compile Remove="Data\Migrations\20191102131632_employee.Designer.cs" />
     <Compile Remove="Data\Migrations\20191102131916_employee.cs" />
     <Compile Remove="Data\Migrations\20191102131916_employee.Designer.cs" />
+    <Compile Remove="Data\Migrations\20191123140146_tasks.cs" />
+    <Compile Remove="Data\Migrations\20191123140146_tasks.Designer.cs" />
+    <Compile Remove="Data\Migrations\20191123140315_tasks2.cs" />
+    <Compile Remove="Data\Migrations\20191123140315_tasks2.Designer.cs" />
   </ItemGroup>
 
 

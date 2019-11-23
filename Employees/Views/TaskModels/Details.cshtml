@@ -1,0 +1,16 @@
+﻿@model long
+@{
+    ViewData["Title"] = "Задача";
+}
+
+<div id="Taskmodel">
+    <taskmodeldetails taskmodelid="@Model"></taskmodeldetails>
+    <taskmodel-team taskmodelid="@Model"></taskmodel-team>
+    <taskmodel-sub taskmodelid="@Model"></taskmodel-sub>
+</div>
+
+@section Scripts{
+    <script type="text/javascript" src="~/vue/taskmodels/taskmodelTeam.js"></script>
+    <script type="text/javascript" src="~/vue/taskmodels/taskmodelSub.js"></script>
+    <script type="text/javascript" src="~/vue/taskmodels/details.js"></script>
+}
