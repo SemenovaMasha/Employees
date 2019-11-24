@@ -22,6 +22,10 @@ namespace Employees.Models.Dto
         public string Role { get; set; }
         public string RoleLocal { get; set; }
         public decimal Salary { get; set; }
+        public decimal? Experience { get; set; }
+        public string LevelName { get; set; }
+        public int Level { get; set; }
+        public bool TaskMatch { get; set; }
 
         public bool IsProjectManager { get; set; }
     }

@@ -31,5 +31,9 @@ namespace Employees.Models.Dto
         public int DateProgressMax { get; set; }
         public DateTime? Date { get; set; }
         public DateTime? CreatedDate { get; set; }
+
+        public DateTime? FullDate { get; set; }
+        public int FullEstimatedTime { get; set; }
+        public bool HasChilds { get; set; }
     }
 }

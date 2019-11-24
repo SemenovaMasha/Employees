@@ -40,6 +40,8 @@ namespace Employees.Services
             user.PassportGiven = dto.PassportGiven;
             user.PassportSeriesNumber = dto.PassportSeriesNumber;
             user.Salary = dto.Salary;
+            user.Level = (Level)dto.Level;
+            user.Experience = dto.Experience;
 
             return user;
         }
@@ -61,6 +63,9 @@ namespace Employees.Services
                 PassportSeriesNumber = model.PassportSeriesNumber,
                 Role = _userManager.GetRolesAsync(model).Result.FirstOrDefault(),
                 Salary = model.Salary,
+                Level = (int)model.Level,
+                LevelName = model.Level.GetDescription(),
+                Experience = model.Experience
             };
         }
 
@@ -79,6 +84,15 @@ namespace Employees.Services
             return (_userManager.GetUsersInRoleAsync(RolesNames.Admin).Result.ToList()
                     .Union(_userManager.GetUsersInRoleAsync(RolesNames.Manager).Result.ToList())).Select(x => Map(x))
                 .ToList();
+        }
+
+        internal List<EnumDto> GetAllLevels()
+        {
+            return Enum.GetValues(typeof(Level)).Cast<Level>().Select(x => new EnumDto()
+            {
+                Id = (int)x,
+                Name = x.GetDescription()
+            }).ToList();
         }
 
         public EmployeeUserDto Add(EmployeeUserDto dto)

@@ -2,7 +2,7 @@
     props: ["taskmodelid"],
     template: `
     <div>
-        <legend>{{currentItem.id == ''?"Новая задача":"Редактирование задачи"}}</legend>
+        <legend>{{currentItem.id == -1?"Новая задача":"Редактирование задачи"}}</legend>
       <b-form @submit="onSubmit" class="col-sm-9">
         <div class="form-group row ">
           <label for="name"class="col-sm-4 col-form-label required">Номер задачи</label>
@@ -57,14 +57,17 @@
         </div>
 
         <div class="form-group row " >
+         <div class="invalid-feedback col-sm-8 offset-sm-4"" style="display:block; color: #f9a711;" >Рекомендуемое время: {{currentItem.recomMinutes}}</div>  
           <label for="estimatedTime" class="col-sm-4 col-form-label">Оценочное время задачи(в минутах)</label>
           <b-form-input class="col-sm-8" type=number 
             id="estimatedTime"
             v-model="currentItem.estimatedTime"
             required     
-          ></b-form-input>     
+          ></b-form-input>       
         </div>
         <div class="form-group row ">
+         <div class="invalid-feedback col-sm-8 offset-sm-4"" style="display:block; color: #f9a711;" >
+                Рекомендуемая дата: {{recomDateDisplay}}</div>  
               <label for="date" class="col-sm-4 col-form-label required">Дата выпонения</label>
                  <date-picker name="date" v-model="currentItem.date" lang="ru" format="DD.MM.YYYY" class="col-sm-8" placeholder=" "
                                             style="padding-left:0px;padding-right:0px;"></date-picker>
@@ -100,6 +103,8 @@
                 taskName: "",
                 taskNumber: "",
                 date: null,
+                recomMinutes: 0,
+                recomDate: null,
             },
             allProjects: [],
             allParents: [],
@@ -107,6 +112,24 @@
             allPrioritys: [],
             allComplexitys: [],
         }
+    },
+    computed: {
+        recomDateDisplay() {
+            if (!this.currentItem.recomDate) return ''
+            var date = new Date(this.currentItem.recomDate);
+            return ('0' + date.getDate()).slice(-2) + '.' + ('0' + (date.getMonth() + 1)).slice(-2) + '.' + ('000' + (date.getFullYear())).slice(-4)
+        }
+    },
+    watch: {
+        'currentItem.complexity': function (newVal, oldVal) {
+            this.recommend();
+        },
+        'currentItem.type': function (newVal, oldVal) {
+            this.recommend();
+        },
+        'currentItem.priority': function (newVal, oldVal) {
+            this.recommend();
+        },
     },
     methods: {
         onSubmit(evt) {
@@ -147,6 +170,19 @@
                 }
             }
         },
+        recommend() {
+            var data = {
+                id: this.currentItem.id,
+                type: this.currentItem.type.id,
+                priority: this.currentItem.priority.id,
+                complexity: this.currentItem.complexity.id,
+            }
+            axios.post("/taskmodels/GetEstimate", data)
+                .then(response => {
+                    this.currentItem.recomMinutes = response.data.minutes
+                    this.currentItem.recomDate = response.data.date
+                })
+        }
     },
     mounted() {
         axios.get("/taskmodels/get", {
@@ -221,7 +257,7 @@
                     this.allParents = response.data
                 })
 
-                window.document.title = this.currentItem.name || "Новая задача"
+                window.document.title = this.currentItem.taskNumber || "Новая задача"
             })
 
         axios.get("/labors/GetAllTypes").then(response => {

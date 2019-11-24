@@ -27,7 +27,7 @@ namespace Employees.Services
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _timer = new Timer(DoWork, null, TimeSpan.Zero,
-                TimeSpan.FromSeconds(30));
+                TimeSpan.FromSeconds(60));
 
             return Task.CompletedTask;
         }
@@ -39,7 +39,7 @@ namespace Employees.Services
                 var estimated = Convert.ToInt32(((task.Date - task.CreatedDate) ?? new TimeSpan(0)).TotalDays);
                 if (estimated == 0) estimated = 1;
                 var elapsed = Convert.ToInt32(((DateTime.Now - task.CreatedDate) ?? new TimeSpan(0)).TotalDays);
-                if (elapsed / estimated * 100 > 50)
+                if (1.0*elapsed / estimated * 100 > 50)
                 {
                     foreach (var taskUser in task.TaskUsers)
                     {
@@ -51,7 +51,7 @@ namespace Employees.Services
                             UserId = taskUser.UserId,
                             Text = $"Планируемая дата выполнения задачи с номером '{task.TaskNumber}' - '{task.Date.Value.ToString("dd.MM.yyyy")}' "
                                    +Environment.NewLine+
-                                   ((elapsed-estimated<0)?$"Дней осталось: {elapsed - estimated} ":$"(Просрочено дней: {estimated- elapsed})")
+                                   ((elapsed-estimated<0)?$"Дней осталось: {estimated - elapsed} ":$"(Просрочено дней: {elapsed  - estimated})")
                         };
                         _context.Notifications.Add(notification);
                     }

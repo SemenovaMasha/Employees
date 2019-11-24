@@ -74,7 +74,7 @@
         Отмена
       </template>
      
-        <b-table striped show-empty :items="filteredAdd"  :fields="addModalFields">
+        <b-table show-empty :items="filteredAdd"  :fields="addModalFields" :tbody-tr-class="rowClass">
 
            <template v-slot:cell(fio)="props">    
                <a :href="'/employees/details?id='+props.item.id">{{props.item.fio}} </a>
@@ -109,6 +109,15 @@
 
             </b-table>
     </b-modal>
+
+         <b-alert variant="danger" style="position: fixed;"
+             :show="successDismissCountDown"
+            dismissible
+            @dismissed="successDismissCountDown=0"
+            @dismiss-count-down="successCountDownChanged"
+            >
+            Рекомендуется увеличить оценочное время выполнения до {{recomMinutes}}
+          </b-alert>
     </div>
     `,
     data: function () {
@@ -180,7 +189,12 @@
                 position: '',
                 role: '',
             },
-            deletedId: -1
+            deletedId: -1,
+
+            recomMinutes: 0,
+            successAlertShow: false,
+            successDismissSecs: 5,
+            successDismissCountDown: 0,
         }
     },
     computed: {
@@ -230,6 +244,8 @@
             })
                 .then(response => {
                     this.allUsers = this.allUsers.filter(item => { return item.id != this.deletedId });
+
+                    this.checkRecom();
                 })
 
         },
@@ -242,8 +258,28 @@
                     this.usersToAdd.filter(item => { return item.checkbox }).forEach(function (item) {
                         to.push(item);
                     });
+                    this.checkRecom();
                 })
-        }
+        },
+        checkRecom() {
+            axios.get("/taskmodels/TimeMatch", {
+                params: {
+                    id: this.taskmodelid
+                }
+            }).then(response => {
+                if (!response.data.match) {
+                    this.successDismissCountDown = this.successDismissSecs
+                    this.recomMinutes = response.data.minutes
+                }
+            })
+        },
+        successCountDownChanged(dismissCountDown) {
+            this.successDismissCountDown = dismissCountDown
+        },
+        rowClass(item, type) {
+            if (!item) return
+            if (item.taskMatch) return 'table-matches'
+        },
     },
 
     mounted() {

@@ -107,3 +107,9 @@ header > nav ul.navbar-nav > li > a:hover {
     right: 20%;
     max-width: 20%;
 }
+.table-matches {
+    background-color: #9fffa4;
+}
+.card-body h4.card-title.notification-new {
+    color: #f57965;
+}

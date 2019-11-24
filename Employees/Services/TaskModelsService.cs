@@ -88,6 +88,9 @@ namespace Employees.Services
                 DateProgressMax = DateProgressMax,
                 Date = model.Date,
                 CreatedDate = model.CreatedDate,
+                FullEstimatedTime = ProgressMax,
+                FullDate = model.Id==-1 ?model.Date:GetLastEstimatedDate(model.Id,DateTime.Now),
+                HasChilds = model.Id==-1 || _context.TaskModels.Any(x=>x.ParentId==model.Id),
             };
         }
 
@@ -102,6 +105,123 @@ namespace Employees.Services
             }
 
             return res;
+        }
+
+        internal EstimateDto TimeMatch(long id)
+        {
+            TaskModel taskModel = _context.TaskModels.FirstOrDefault(x => x.Id == id);
+            var est = GetEstimate(new EstimateDataDto()
+            {
+                Id = id,
+                Priority = (int) taskModel.Priority,
+                Complexity = (int) taskModel.Complexity,
+                Type = (int) taskModel.Type,
+            });
+
+            est.Match = taskModel.EstimatedTime >= est.Minutes;
+            return  est;
+        }
+
+        private DateTime GetLastEstimatedDate(long id, DateTime max)
+        {
+            TaskModel TaskModel = _context.TaskModels.FirstOrDefault(x => x.Id == id);
+            var childs = _context.TaskModels.Where(x => x.ParentId == id);
+            DateTime res = new[] {(TaskModel.Date ?? DateTime.MinValue), max}.Max();
+            foreach (var child in childs)
+            {
+                res = GetLastEstimatedDate(child.Id,res);
+            }
+
+            return res;
+        }
+
+        internal EstimateDto GetEstimate(EstimateDataDto dto)
+        {
+            int baseMinutes = 2000;
+
+            if (dto.Complexity > 0) baseMinutes += 500 * dto.Complexity;
+
+            if (dto.Priority == (int)TaskPriority.Critical) baseMinutes -= 700;
+            if (dto.Priority == (int)TaskPriority.High) baseMinutes -= 300;
+            if (dto.Priority == (int)TaskPriority.Low) baseMinutes += 300;
+
+            if (dto.Type == (int) TaskType.Implementation) baseMinutes += 300;
+
+            if (!MatchUsers(dto)) baseMinutes = (int)(baseMinutes*1.5);
+
+            int days = baseMinutes / 480 +1;
+
+            DateTime createdDate = DateTime.Now;
+
+            if (dto.Id != -1)
+            {
+                var c = _context.TaskModels.Where(x => x.Id == dto.Id).FirstOrDefault().CreatedDate;
+                if(c.HasValue) createdDate = c.Value;
+            }
+
+            return  new EstimateDto()
+            {
+                Minutes = baseMinutes,
+                Date = AddWorkdays(createdDate,days),
+            };
+        }
+
+        public bool MatchUsers(EstimateDataDto dto)
+        {
+            if (dto.Id == -1) return true;
+
+            //если ни в одной подзадаче и в текущей нет сотрудника нужного уровня
+            return TaskMatch(dto.Id, dto);
+        }
+
+        private bool TaskMatch(long taskId, EstimateDataDto dto)
+        {
+            TaskModel task = _context.TaskModels
+                .Include(x=>x.TaskUsers)
+                .Where(x => x.Id == taskId).FirstOrDefault();
+            foreach (var taskUser in task.TaskUsers)
+            {
+                EmployeeUser user = _context.Users.FirstOrDefault(x => x.Id == taskUser.UserId);
+                if (UserMatch(user, dto)) return true;
+            }
+
+            foreach (var child in _context.TaskModels.Where(x=>x.ParentId==task.Id))
+            {
+                if (TaskMatch(child.Id, dto)) return true;
+            }
+
+            return false;
+        }
+
+        private bool UserMatch(EmployeeUser user, EstimateDataDto dto)
+        {
+            if (dto.Complexity > 2 || (dto.Priority == (int)TaskPriority.Critical))
+            {
+                return user.Level == Level.Senior && user.Experience > 3;
+            }
+            if (dto.Complexity > 1 || (dto.Priority == (int)TaskPriority.High))
+            {
+                return user.Level >= Level.Middle && user.Experience > 1.5m;
+            }
+            if (dto.Complexity > 0 || (dto.Priority == (int)TaskPriority.Usual))
+            {
+                return user.Level >= Level.Junior && user.Experience > 0.5m;
+            }
+
+            return true;
+        }
+
+        public DateTime AddWorkdays(DateTime originalDate, int workDays)
+        {
+            DateTime tmpDate = originalDate;
+            while (workDays > 0)
+            {
+                tmpDate = tmpDate.AddDays(1);
+                if (tmpDate.DayOfWeek < DayOfWeek.Saturday &&
+                    tmpDate.DayOfWeek > DayOfWeek.Sunday)
+                    workDays--;
+            }
+            return tmpDate;
         }
 
         private int GetAllElapsedTime(long id)
@@ -165,7 +285,7 @@ namespace Employees.Services
             List<long> childIds =new List<long>(){id};
             GetAllChilds(id, childIds);
 
-            return _context.TaskModels.Where(x=>!childIds.Contains(x.Id)).Select(x => Map(x,false)).ToList();
+            return _context.TaskModels.Where(x=>!childIds.Contains(x.Id)).ToList().Select(x => Map(x,false)).ToList();
         }
 
         private void GetAllChilds(long id, List<long> childIds)
@@ -306,13 +426,30 @@ namespace Employees.Services
         {
             var taskModel = _context.TaskModels.FirstOrDefault(x => x.Id == taskModelId);
 
-            return _context.Users.Include(x => x.TaskUsers).Include(x => x.ProjectUsers)
+            var list = _context.Users.Include(x => x.TaskUsers).Include(x => x.ProjectUsers)
                 .Include(x=>x.Position)
                 .Where(x => !x.TaskUsers.Any(p => p.TaskModelId == taskModel.Id)&& x.ProjectUsers.Any(p => p.ProjectId == taskModel.ProjectId))
-                .ToList()
-                .Select(x => _employeeUsersService.Map(x))
+                .ToList();
+            
+            return list
+                .Select(x =>
+                {
+                    var tmp = _employeeUsersService.Map(x);
+                    tmp.TaskMatch=UserMatch(x, MapToEstimateDataDto(taskModel));
+                    return tmp;
+                })
                 .ToList();
         }
 
+        private EstimateDataDto MapToEstimateDataDto(TaskModel model)
+        {
+            return new EstimateDataDto()
+            {
+                Id = model.Id,
+                Priority = (int)(model.Priority),
+                Complexity = (int)(model.Complexity),
+                Type = (int)(model.Type),
+            };
+        }
     }
 }

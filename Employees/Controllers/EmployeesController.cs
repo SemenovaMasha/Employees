@@ -101,8 +101,10 @@ namespace Employees.Controllers
         {
             return _employeeUsersService.Map(CurrentUser);
         }
-        public void test(ReportType type)
+
+        public List<EnumDto> GetAllLevels()
         {
+            return _employeeUsersService.GetAllLevels();
         }
     }
 }

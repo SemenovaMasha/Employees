@@ -68,6 +68,19 @@
               rows="2"
             ></b-form-textarea>
         </div>
+        <div class="form-group row ">
+          <label for="salary" class="col-sm-4 col-form-label required">Стаж работы</label>
+          <b-form-input class="col-sm-8"  type=number step="0.01"
+            id="salary"
+            v-model="currentItem.experience"
+            required   
+          ></b-form-input>     
+        </div>
+        <div class="form-group row ">
+              <label for="level" class="col-sm-4 col-form-label required">Уровень</label>         
+              <v-select  placeholder=" " v-model="currentItem.level" as="name::id" :from="allLevels" tagging class="col-sm-8"></v-select>              
+              <div class="invalid-feedback col-sm-8 offset-sm-4"" style="display:block" v-if="!currentItem.level || (currentItem.level.name == ' ')">Выберите уровень сотрудника</div>
+        </div>
 
         <div class="form-group row " v-if="isAdmin">
           <label for="position" class="col-sm-4 col-form-label required">Должность</label>         
@@ -131,8 +144,11 @@
                 address: "",
                 role: 'Сотрудник',
                 salary: 0,
+                level: '',
+                experience: 0,
             },
             allPositions: [],
+            allLevels: [],
             allRoles: [
                 { text: 'Сотрудник' },
                 { text: 'Менеджер' },
@@ -144,9 +160,12 @@
         onSubmit(evt) {
             evt.preventDefault()
             
-            if (this.currentItem.position && this.currentItem.birthDate && this.currentItem.position != ' ' && this.currentItem.position.id !=-1) {
+            if (this.currentItem.position && this.currentItem.birthDate && this.currentItem.position != ' '
+                && this.currentItem.position.id != -1 &&   this.currentItem.level) {
                 this.currentItem.positionId = this.currentItem.position.id
                 this.currentItem.position = ''
+                this.currentItem.level = this.currentItem.level.id
+
                 if (this.currentItem.id == '') {
                     axios.post("/employees/Add", Object.assign({}, this.currentItem))
                         .then(response => {
@@ -162,6 +181,9 @@
         },
     },
     mounted() {
+        axios.get("/employees/GetallLevels").then(response => {
+            this.allLevels = response.data
+        })
         axios.get("/position/GetAll")
             .then(response => {
                 this.allPositions = response.data
@@ -184,7 +206,19 @@
                 this.currentItem.additionalInfo = response.data.additionalInfo;
                 this.currentItem.address = response.data.address;
                 this.currentItem.role = response.data.role;
-                //this.currentItem.position = response.data.position;
+                this.currentItem.experience = response.data.experience;
+
+                if (response.data.level) {
+                    this.currentItem.level = {
+                        id: response.data.level,
+                        name: response.data.levelName
+                    };
+                } else {
+                    this.currentItem.level = {
+                        id: -1,
+                        name: ' '
+                    };
+                }
                 if (response.data.position) {
                     this.currentItem.position = {
                         id: response.data.positionId,

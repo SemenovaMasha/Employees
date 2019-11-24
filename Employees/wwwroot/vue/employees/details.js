@@ -15,6 +15,8 @@ Vue.component('employeedetails',
           </div>
           <div class="card-body">
             <p class="card-text">{{currentItem.education}}</p>
+            <p class="card-text">Стаж работы: {{currentItem.experience}}</p>
+            <p class="card-text">Уровень: {{currentItem.level}}</p>
           </div>   
           <ul class="list-group list-group-flush">
             <li class="list-group-item">
@@ -92,6 +94,8 @@ Vue.component('employeedetails',
                     this.currentItem.role = response.data.role;
                     this.currentItem.position = response.data.position;
                     this.currentItem.salary = response.data.salary;
+                    this.currentItem.level = response.data.levelName;
+                    this.currentItem.experience = response.data.experience;
 
                     window.document.title = this.currentItem.fio 
                 })

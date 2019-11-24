@@ -18,6 +18,12 @@ Vue.component('taskmodeldetails',
             <p class="card-title" style="white-space: pre-wrap;">Оценочное время: {{currentItem.estimatedTime}}</p>
             <p class="card-title" style="white-space: pre-wrap;">Дата выполнения: {{dateDisplay}}</p>
             <p class="card-title" style="white-space: pre-wrap;">Дата создания: {{createdDateDisplay}}</p>
+
+            <slot v-if="currentItem.hasChilds">
+                <br/>
+                <p class="card-title" style="white-space: pre-wrap;">Оценочное время с учетом подзадач: {{currentItem.fullEstimatedTime}}</p>
+                <p class="card-title" style="white-space: pre-wrap;">Дата выполнения с учетом подзадач: {{fullDateDisplay}}</p>
+            </slot>
           </div>
           <ul class="list-group list-group-flush">
             <li class="list-group-item">
@@ -51,25 +57,31 @@ Vue.component('taskmodeldetails',
                     taskNumber: "",
                     status: "",
                     date: null,
-                    createdDate: null
+                    createdDate: null,
+                    fullDate: null,
+                    fullEstimatedTime: 0,
+                    hasChilds:false,
                 },
                 canEdit:false
             }
         },
         computed: {
             dateDisplay() {
-                if (!this.currentItem.date) return ''
-                var date = new Date(this.currentItem.date);
-                return ('0' + date.getDate()).slice(-2) + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + ('000' + (date.getFullYear())).slice(-4)
+                return this.getDateDisplay(this.currentItem.date);
             },
-
             createdDateDisplay() {
-                if (!this.currentItem.createdDate) return ''
-                var date = new Date(this.currentItem.createdDate);
-                return ('0' + date.getDate()).slice(-2) + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + ('000' + (date.getFullYear())).slice(-4)
-            }
+                return this.getDateDisplay(this.currentItem.createdDate);
+            },
+            fullDateDisplay() {
+                return this.getDateDisplay(this.currentItem.fullDate);
+            },
         },
         methods: {
+            getDateDisplay(dateInput) {
+                if (!dateInput) return ''
+                var date = new Date(dateInput);
+                return ('0' + date.getDate()).slice(-2) + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + ('000' + (date.getFullYear())).slice(-4)
+            },
             edit() {
                 document.location.href = '/taskmodels/edit?id='+this.currentItem.id
             },
@@ -95,7 +107,9 @@ Vue.component('taskmodeldetails',
                     this.currentItem.status = response.data.status;
                     this.currentItem.date = response.data.date;
                     this.currentItem.createdDate = response.data.createdDate;
-                   
+                    this.currentItem.hasChilds = response.data.hasChilds;
+                    this.currentItem.fullEstimatedTime = response.data.fullEstimatedTime;
+                    this.currentItem.fullDate = response.data.fullDate;
 
                     window.document.title = this.currentItem.taskNumber 
                 })

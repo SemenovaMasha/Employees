@@ -124,5 +124,16 @@ namespace Employees.Controllers
         {
             return _TaskModelService.GetParents(id);
         }
+
+        [HttpPost]
+        public EstimateDto GetEstimate([FromBody]EstimateDataDto dto)
+        {
+            return _TaskModelService.GetEstimate(dto);
+        }
+
+        public EstimateDto TimeMatch(long id)
+        {
+            return _TaskModelService.TimeMatch(id);
+        }
     }
 }
