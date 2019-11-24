@@ -60,6 +60,8 @@ namespace Employees
             services.AddScoped<ReportsService>();
             services.AddScoped<EmailService>();
             services.AddScoped<TaskModelsService>();
+            services.AddScoped<NotificationsService>();
+            services.AddHostedService<TaskDateChecker>();
 
 
             services.AddSingleton<IConfiguration>(Configuration);

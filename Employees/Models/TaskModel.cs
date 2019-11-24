@@ -23,6 +23,8 @@ namespace Employees.Models
         public int EstimatedTime { get; set; }
         public TaskModel Parent { get; set; }
         public long? ParentId { get; set; }
+        public DateTime? Date { get; set; }
+        public DateTime? CreatedDate { get; set; }
 
         public List<TaskUser> TaskUsers { get; set; }
     }

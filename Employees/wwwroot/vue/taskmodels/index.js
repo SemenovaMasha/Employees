@@ -27,8 +27,10 @@ new Vue({
   
         <template v-slot:cell(progress)="props">    
            <b-progress>
-              <b-progress-bar :max="props.item.progressMax" :value="props.item.progressValue" :variant="progressVariant(props.item.progressValue,props.item.progressMax)" >{{ props.item.progressValue }}/{{ props.item.progressMax }}
-              </b-progress-bar>
+              <b-progress-bar :max="props.item.progressMax" :value="props.item.progressValue" :variant="progressVariant(props.item.progressValue,props.item.progressMax)" >{{ props.item.progressValue }}/{{ props.item.progressMax }}</b-progress-bar>
+            </b-progress>   
+           <b-progress>
+              <b-progress-bar :max="props.item.dateProgressMax" :value="props.item.dateProgressValue" :variant="progressVariant(props.item.dateProgressValue,props.item.dateProgressMax)" >{{ props.item.dateProgressValue }}/{{ props.item.dateProgressMax }}</b-progress-bar>
         </b-progress>   
       </template>
 
@@ -107,8 +109,8 @@ new Vue({
                 //},
                 {
                     key: 'progress',
-                    label: '',
-                    width:3,
+                    label: 'Затрачено времени Прошло дней',
+                    width: 3,
                 },
                 {
                     key: 'actions',

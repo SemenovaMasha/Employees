@@ -44,6 +44,7 @@ namespace Employees.Services
             user.Status = (TaskStatus)dto.Status;
             user.EstimatedTime = dto.EstimatedTime;
             user.ParentId = dto.ParentId==-1?null: dto.ParentId;
+            user.Date = dto.Date;
 
             return user;
         }
@@ -51,11 +52,16 @@ namespace Employees.Services
         public TaskModelDto Map(TaskModel model,bool progress=false)
         {
             int ProgressValue = 0;
+            int DateProgressMax = 0;
+            int DateProgressValue = 0;
             int ProgressMax = 0;
             if (progress)
             {
                 ProgressMax = GetAllEstimatedTime(model.Id);
                 ProgressValue = GetAllElapsedTime(model.Id);
+
+                DateProgressMax = GetAllEstimatedDate(model.Id);
+                DateProgressValue = GetAllElapsedDate(model.Id);
             }
             return new TaskModelDto()
             {
@@ -77,7 +83,11 @@ namespace Employees.Services
                 ParentId = model.ParentId,
                 Parent = model.Parent?.TaskNumber,
                 ProgressValue = ProgressValue,
-                ProgressMax= ProgressMax
+                ProgressMax = ProgressMax,
+                DateProgressValue = DateProgressValue,
+                DateProgressMax = DateProgressMax,
+                Date = model.Date,
+                CreatedDate = model.CreatedDate,
             };
         }
 
@@ -94,7 +104,6 @@ namespace Employees.Services
             return res;
         }
 
-
         private int GetAllElapsedTime(long id)
         {
             TaskModel TaskModel = _context.TaskModels.FirstOrDefault(x => x.Id == id);
@@ -107,6 +116,18 @@ namespace Employees.Services
 
             return res;
         }
+
+        private int GetAllEstimatedDate(long id)
+        {
+            TaskModel taskModel = _context.TaskModels.FirstOrDefault(x => x.Id == id);
+            return Convert.ToInt32(((taskModel.Date - taskModel.CreatedDate) ?? new TimeSpan(0)).TotalDays);
+        }
+        private int GetAllElapsedDate(long id)
+        {
+            TaskModel taskModel = _context.TaskModels.FirstOrDefault(x => x.Id == id);
+            return Convert.ToInt32(((DateTime.Now - taskModel.CreatedDate) ?? new TimeSpan(0)).TotalDays);
+        }
+
 
         public List<TaskModelDto> GetAllByUser(string id)
         {
@@ -124,6 +145,7 @@ namespace Employees.Services
         public TaskModelDto Add(TaskModelDto dto, EmployeeUser currentUser)
         {
             TaskModel TaskModel = Map(dto);
+            TaskModel.CreatedDate=DateTime.Now;
             _context.TaskModels.Add(TaskModel);
             _context.TaskUsers.Add(new TaskUser()
             {

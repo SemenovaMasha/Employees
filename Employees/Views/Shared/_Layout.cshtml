@@ -1,6 +1,8 @@
-﻿@using Microsoft.AspNetCore.Identity
+﻿@using Employees.Services
+@using Microsoft.AspNetCore.Identity
 @inject SignInManager<EmployeeUser> SignInManager
 @inject UserManager<EmployeeUser> UserManager
+@inject NotificationsService NotificationsService
 
 <!DOCTYPE html>
 <html lang="ru">
@@ -90,6 +92,14 @@
                                 </ul>
                             </li>
                         }
+                    @if (user != null)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Notifications" asp-action="Index">
+                                <i class="fas fa-exclamation-circle" style="font-size: 22px;@(NotificationsService.HasNew(user.Id) ? " color:#f57965; " : "")"></i>
+                            </a>
+                        </li>
+                    }
                     </ul>
                 </div>
             </div>

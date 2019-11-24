@@ -16,6 +16,8 @@ Vue.component('taskmodeldetails',
             <h5 class="card-title" style="white-space: pre-wrap;">{{currentItem.taskName}}</h5>
             <p class="card-title" style="white-space: pre-wrap;">{{currentItem.taskDescription}}</p>
             <p class="card-title" style="white-space: pre-wrap;">Оценочное время: {{currentItem.estimatedTime}}</p>
+            <p class="card-title" style="white-space: pre-wrap;">Дата выполнения: {{dateDisplay}}</p>
+            <p class="card-title" style="white-space: pre-wrap;">Дата создания: {{createdDateDisplay}}</p>
           </div>
           <ul class="list-group list-group-flush">
             <li class="list-group-item">
@@ -48,8 +50,23 @@ Vue.component('taskmodeldetails',
                     taskName: "",
                     taskNumber: "",
                     status: "",
+                    date: null,
+                    createdDate: null
                 },
                 canEdit:false
+            }
+        },
+        computed: {
+            dateDisplay() {
+                if (!this.currentItem.date) return ''
+                var date = new Date(this.currentItem.date);
+                return ('0' + date.getDate()).slice(-2) + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + ('000' + (date.getFullYear())).slice(-4)
+            },
+
+            createdDateDisplay() {
+                if (!this.currentItem.createdDate) return ''
+                var date = new Date(this.currentItem.createdDate);
+                return ('0' + date.getDate()).slice(-2) + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + ('000' + (date.getFullYear())).slice(-4)
             }
         },
         methods: {
@@ -76,6 +93,9 @@ Vue.component('taskmodeldetails',
                     this.currentItem.taskName = response.data.taskName;
                     this.currentItem.taskNumber = response.data.taskNumber;
                     this.currentItem.status = response.data.status;
+                    this.currentItem.date = response.data.date;
+                    this.currentItem.createdDate = response.data.createdDate;
+                   
 
                     window.document.title = this.currentItem.taskNumber 
                 })

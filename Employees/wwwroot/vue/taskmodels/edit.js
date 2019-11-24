@@ -64,6 +64,12 @@
             required     
           ></b-form-input>     
         </div>
+        <div class="form-group row ">
+              <label for="date" class="col-sm-4 col-form-label required">Дата выпонения</label>
+                 <date-picker name="date" v-model="currentItem.date" lang="ru" format="DD.MM.YYYY" class="col-sm-8" placeholder=" "
+                                            style="padding-left:0px;padding-right:0px;"></date-picker>
+                <div class="invalid-feedback col-sm-8 offset-sm-4"" style="display:block" v-if="!this.currentItem.date ">Выберите дату</div>  
+        </div>
 
         <div class="form-group row"  v-if="isAdmin">
           <label for="manager" class="col-sm-4 col-form-label required">Менеджер</label>         
@@ -93,6 +99,7 @@
                 taskDescription: "",
                 taskName: "",
                 taskNumber: "",
+                date: null,
             },
             allProjects: [],
             allParents: [],
@@ -108,7 +115,8 @@
             if (this.currentItem.project && this.currentItem.project != ' ' && this.currentItem.project.id != -1 &&
                 this.currentItem.type &&
                 this.currentItem.priority &&
-                this.currentItem.complexity 
+                this.currentItem.complexity
+                && this.currentItem.date 
             ) {
                 this.currentItem.projectId = this.currentItem.project.id
                 this.currentItem.project = this.currentItem.project.name
@@ -119,13 +127,14 @@
                 } else {
                     this.currentItem.parentId = -1
                 }
-                
+
+                this.currentItem.date.setHours(this.currentItem.date.getHours() + 11);
 
                 this.currentItem.type = this.currentItem.type.id
                 this.currentItem.priority = this.currentItem.priority.id
                 this.currentItem.complexity = this.currentItem.complexity.id
 
-                if (this.currentItem.id == '') {
+                if (this.currentItem.id == -1) {
                     axios.post("/taskmodels/Add", Object.assign({}, this.currentItem))
                         .then(response => {
                             document.location.href = '/taskmodels/details?id=' + response.data.id
@@ -151,7 +160,7 @@
                 this.currentItem.taskName = response.data.taskName;
                 this.currentItem.taskDescription = response.data.taskDescription;
                 this.currentItem.estimatedTime = response.data.estimatedTime;
-
+                this.currentItem.date = response.data.date ? new Date(response.data.date) : '';
                 if (response.data.project) {
                     this.currentItem.project = {
                         id: response.data.projectId,

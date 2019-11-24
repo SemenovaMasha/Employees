@@ -27,5 +27,9 @@ namespace Employees.Models.Dto
         public string TaskUsers { get; set; }
         public int ProgressValue { get; set; }
         public int ProgressMax { get; set; }
+        public int DateProgressValue { get; set; }
+        public int DateProgressMax { get; set; }
+        public DateTime? Date { get; set; }
+        public DateTime? CreatedDate { get; set; }
     }
 }

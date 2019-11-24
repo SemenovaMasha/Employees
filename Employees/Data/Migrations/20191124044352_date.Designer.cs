@@ -4,14 +4,16 @@ using Employees.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Employees.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20191124044352_date")]
+    partial class date
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -150,29 +152,6 @@ namespace Employees.Data.Migrations
                     b.ToTable("Labors");
                 });
 
-            modelBuilder.Entity("Employees.Models.Notification", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<DateTime>("Date");
-
-                    b.Property<string>("Name");
-
-                    b.Property<bool>("New");
-
-                    b.Property<string>("Text");
-
-                    b.Property<string>("UserId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Notifications");
-                });
-
             modelBuilder.Entity("Employees.Models.Position", b =>
                 {
                     b.Property<long>("Id")
@@ -234,8 +213,6 @@ namespace Employees.Data.Migrations
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<int>("Complexity");
-
-                    b.Property<DateTime?>("CreatedDate");
 
                     b.Property<DateTime?>("Date");
 
@@ -421,13 +398,6 @@ namespace Employees.Data.Migrations
                         .WithMany()
                         .HasForeignKey("TaskModelId");
 
-                    b.HasOne("Employees.Models.EmployeeUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
-                });
-
-            modelBuilder.Entity("Employees.Models.Notification", b =>
-                {
                     b.HasOne("Employees.Models.EmployeeUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId");

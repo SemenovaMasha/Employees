@@ -17,6 +17,7 @@ namespace Employees.Data
         public DbSet<BonusSettings> BonusSettings { get; set; }
         public DbSet<TaskModel> TaskModels { get; set; }
         public DbSet<TaskUser> TaskUsers { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
