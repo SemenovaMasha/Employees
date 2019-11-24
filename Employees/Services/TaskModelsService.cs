@@ -279,7 +279,7 @@ namespace Employees.Services
         public List<TaskModelDto> GetParents(long id)
         {
             if(id==-1)
-                return _context.TaskModels.Select(x => Map(x,false)).ToList();
+                return _context.TaskModels.ToList().Select(x => Map(x,false)).ToList();
 
 
             List<long> childIds =new List<long>(){id};
