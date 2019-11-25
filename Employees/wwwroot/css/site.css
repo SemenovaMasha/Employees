@@ -113,3 +113,6 @@ header > nav ul.navbar-nav > li > a:hover {
 .card-body h4.card-title.notification-new {
     color: #f57965;
 }
+.progress .progress-bar {
+    color: black;
+}
