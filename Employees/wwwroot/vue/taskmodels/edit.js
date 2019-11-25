@@ -62,9 +62,19 @@
           <b-form-input class="col-sm-8" type=number 
             id="estimatedTime"
             v-model="currentItem.estimatedTime"
-            required     
+            required  
+            :readonly = "currentItem.id !=-1 && !isManager"
           ></b-form-input>       
         </div>
+        <div class="form-group row " v-if="currentItem.id !=-1 && currentItem.estimatedTime != currentItem.oldEstimatedTime">
+          <label for="name"class="col-sm-4 col-form-label required">Комментарий</label>
+          <b-form-input class="col-sm-8"
+            v-model="currentItem.changeEstimateReason"
+            required   
+          ></b-form-input>   
+        <div class="invalid-feedback col-sm-8 offset-sm-4"" style="display:block">Вы изменили оценочное вермя, пожалуйста, укажите причину</div>
+        </div>
+
         <div class="form-group row ">
          <div class="invalid-feedback col-sm-8 offset-sm-4"" style="display:block; color: #f9a711;" >
                 Рекомендуемая дата: {{recomDateDisplay}}</div>  
@@ -90,6 +100,7 @@
     `,
     data: function () {
         return {
+            isManager: false,
             isAdmin: false,
             currentItem: {
                 id: -1,
@@ -99,12 +110,14 @@
                 type: '',
                 complexity: '',
                 estimatedTime: 0,
+                oldEstimatedTime: 0,
                 taskDescription: "",
                 taskName: "",
                 taskNumber: "",
                 date: null,
                 recomMinutes: 0,
                 recomDate: null,
+                changeEstimateReason:'Переоценка',
             },
             allProjects: [],
             allParents: [],
@@ -156,6 +169,7 @@
                 this.currentItem.type = this.currentItem.type.id
                 this.currentItem.priority = this.currentItem.priority.id
                 this.currentItem.complexity = this.currentItem.complexity.id
+                this.currentItem.changeEstimateReason = this.currentItem.changeEstimateReason
 
                 if (this.currentItem.id == -1) {
                     axios.post("/taskmodels/Add", Object.assign({}, this.currentItem))
@@ -196,6 +210,7 @@
                 this.currentItem.taskName = response.data.taskName;
                 this.currentItem.taskDescription = response.data.taskDescription;
                 this.currentItem.estimatedTime = response.data.estimatedTime;
+                this.currentItem.oldEstimatedTime = response.data.estimatedTime;
                 this.currentItem.date = response.data.date ? new Date(response.data.date) : '';
                 if (response.data.project) {
                     this.currentItem.project = {
@@ -273,7 +288,11 @@
         axios.get("/projects/GetAllMine").then(response => {
             this.allProjects = response.data
         })
-        
+        axios.get("/employees/isManager")
+            .then(response => {
+                this.isManager = response.data
+            })
+
     },
     components: {
         vSelect: VueSelect.vSelect,

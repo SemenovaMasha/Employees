@@ -46,6 +46,10 @@ namespace Employees.Controllers
         {
             return _TaskModelService.GetAll();
         }
+        public List<TaskModelDto> GetBy(TaskModelListSettingsDto dto)
+        {
+            return _TaskModelService.GetBy(dto, CurrentUser.Id);
+        }
 
 
         public TaskModelDto Get(long id)
@@ -72,7 +76,7 @@ namespace Employees.Controllers
         [HttpPost]
         public TaskModelDto Update([FromBody]TaskModelDto dto)
         {
-            return _TaskModelService.Update(dto);
+            return _TaskModelService.Update(dto, CurrentUser);
         }
 
         public bool ListReadonly()
@@ -134,6 +138,16 @@ namespace Employees.Controllers
         public EstimateDto TimeMatch(long id)
         {
             return _TaskModelService.TimeMatch(id);
+        }
+
+        public void ChangeStatus(long id)
+        {
+            _TaskModelService.ChangeStatus(id);
+        }
+
+        public List<EstimateHistoryDto> GetEstimateHistory(long id)
+        {
+            return _TaskModelService.GetEstimateHistory(id);
         }
     }
 }

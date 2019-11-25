@@ -49,6 +49,7 @@ namespace Employees.Services
             return user;
         }
 
+
         public TaskModelDto Map(TaskModel model,bool progress=false)
         {
             int ProgressValue = 0;
@@ -94,6 +95,23 @@ namespace Employees.Services
             };
         }
 
+        public EstimateHistoryDto Map(EstimateHistory model)
+        {
+            return new EstimateHistoryDto()
+            {
+                Id = model.Id,
+                UserId = model.UserId,
+                User = model.User.FIO,
+                TaskModelId = model.TaskModelId,
+                NewValue = model.NewValue,
+                OldValue=model.OldValue,
+                Reason=model.Reason,
+                TaskModel = model.TaskModel.TaskNumber,
+                Date = model.Date
+            };
+        }
+
+
         private int GetAllEstimatedTime(long id)
         {
             TaskModel TaskModel = _context.TaskModels.FirstOrDefault(x => x.Id == id);
@@ -105,6 +123,31 @@ namespace Employees.Services
             }
 
             return res;
+        }
+
+        internal void ChangeStatus(long id)
+        {
+            TaskModel taskModel = _context.TaskModels.FirstOrDefault(x => x.Id == id);
+            if (taskModel.Status == TaskStatus.Done)
+            {
+                taskModel.Status = TaskStatus.Open;
+            }
+            else
+            {
+                taskModel.Status = TaskStatus.Done;
+            }
+            _context.SaveChanges();
+        }
+
+        internal List<EstimateHistoryDto> GetEstimateHistory(long id)
+        {
+            return _context.EstimateHistories
+                .Include(x => x.User)
+                .Include(x => x.TaskModel)
+                .Where(x => x.TaskModelId == id)
+                .OrderByDescending(x=>x.Date)
+                .ToList()
+                .Select(x => Map(x)).ToList();
         }
 
         internal EstimateDto TimeMatch(long id)
@@ -261,17 +304,50 @@ namespace Employees.Services
         {
             return _context.TaskModels.Include(x => x.Project).Include(x => x.Parent).ToList().Select(x => Map(x,true)).ToList();
         }
-        
+
+        internal List<TaskModelDto> GetBy(TaskModelListSettingsDto dto, string userId)
+        {
+            var res = _context.TaskModels.Include(x => x.Project).Include(x => x.Parent).Where(x=>true);
+            if (dto.ByUser == ByUser.Mine) res = res.Include(x => x.TaskUsers)
+                 .Where(x => x.TaskUsers.Any(p => p.UserId == userId));
+
+            if (dto.ByStatus == ByStatus.Open) res = res.Where(x => x.Status == TaskStatus.Open);
+            if (dto.ByStatus == ByStatus.Done) res = res.Where(x => x.Status == TaskStatus.Done);
+
+            var list = res.ToList();
+
+            if (dto.ByStatus == ByStatus.Over)
+            {
+                return list.Select(x => Map(x, true)).Where(x => x.Status == (int)TaskStatus.Open && x.DateProgressMax < x.DateProgressValue).ToList();
+            }
+            else
+            {
+                return list.Select(x => Map(x,true)).ToList();
+            }
+        }
+
         public TaskModelDto Add(TaskModelDto dto, EmployeeUser currentUser)
         {
             TaskModel TaskModel = Map(dto);
             TaskModel.CreatedDate=DateTime.Now;
-            _context.TaskModels.Add(TaskModel);
-            _context.TaskUsers.Add(new TaskUser()
+            var saved =_context.TaskModels.Add(TaskModel);
+             _context.TaskUsers.Add(new TaskUser()
             {
                 TaskModelId = TaskModel.Id,
                 UserId = currentUser.Id
             });
+            _context.SaveChanges();
+
+            var estHist = new EstimateHistory()
+            {
+                Reason = "Создание задачи",
+                NewValue = dto.EstimatedTime,
+                OldValue = 0,
+                TaskModelId = saved.Entity.Id,
+                UserId = currentUser.Id,
+                Date=DateTime.Now,
+            };
+            _context.EstimateHistories.Add(estHist);
             _context.SaveChanges();
             return Map(TaskModel);
         }
@@ -340,11 +416,41 @@ namespace Employees.Services
         //        .Include(x => x.Manager).Where(x=>x.ManagerId == id).ToList().Select(x => Map(x)).ToList();
         //}
 
-        public TaskModelDto Update(TaskModelDto dto)
+        public TaskModelDto Update(TaskModelDto dto, EmployeeUser user)
         {
+            var oldTime = _context.TaskModels.Where(x => x.Id == dto.Id).FirstOrDefault().EstimatedTime;
             TaskModel TaskModel = Map(dto);
             _context.TaskModels.Update(TaskModel);
 
+            if (oldTime != dto.EstimatedTime)
+            {
+                foreach(var userTask in _context.TaskUsers.Where(x => x.TaskModelId == dto.Id)){
+                    var not = new Notification()
+                    {
+                        Date = DateTime.Now,
+                        Name = "Оценочное время было изменено",
+                        New = true,
+                        Text = $"Оценочное время задачи с номером {dto.TaskNumber} проекта {dto.Project} было изменено. " + Environment.NewLine +
+                        $"Старое значение: {oldTime} " + Environment.NewLine +
+                        $"Новое значение: {dto.EstimatedTime} " + Environment.NewLine +
+                        $"Изменил: {user.FIO} " + Environment.NewLine +
+                        $"Комментарий: {dto.ChangeEstimateReason}",
+                        UserId = userTask.UserId
+                    };
+                    _context.Notifications.Add(not);
+                }
+
+                var estHist = new EstimateHistory()
+                {
+                    Reason = dto.ChangeEstimateReason,
+                    NewValue = dto.EstimatedTime,
+                    OldValue = oldTime,
+                    TaskModelId = dto.Id,
+                    UserId = user.Id,
+                    Date = DateTime.Now
+                };
+                _context.EstimateHistories.Add(estHist);
+            }
 
             _context.SaveChanges();
             return Map(TaskModel,true);
@@ -383,6 +489,7 @@ namespace Employees.Services
 
         public void AddUsersToTaskModel(long TaskModelId, List<string> userIds)
         {
+            var TaskModel = _context.TaskModels.Include(x=>x.Project).Where(x => x.Id == TaskModelId).FirstOrDefault();
             foreach (string userId in userIds)
             {
                 _context.TaskUsers.Add(new TaskUser()
@@ -390,6 +497,15 @@ namespace Employees.Services
                     TaskModelId = TaskModelId,
                     UserId = userId,
                 });
+                var not = new Notification()
+                {
+                    Date = DateTime.Now,
+                    Name = "Вам назначили задачу",
+                    New = true,
+                    Text = $"Задача с номером {TaskModel.TaskNumber} в проекте {TaskModel.Project.Name} была назначена вам. Просьба обратить внимание.",
+                    UserId = userId
+                };
+                _context.Notifications.Add(not);
             }
 
             _context.SaveChanges();

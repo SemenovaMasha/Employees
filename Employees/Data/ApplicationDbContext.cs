@@ -18,6 +18,7 @@ namespace Employees.Data
         public DbSet<TaskModel> TaskModels { get; set; }
         public DbSet<TaskUser> TaskUsers { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<EstimateHistory> EstimateHistories { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

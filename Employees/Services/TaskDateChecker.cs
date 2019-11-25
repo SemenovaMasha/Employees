@@ -34,7 +34,7 @@ namespace Employees.Services
 
         private void DoWork(object state)
         {
-            foreach (var task in _context.TaskModels.Include(x=>x.TaskUsers))
+            foreach (var task in _context.TaskModels.Where(x=>x.Status==Models.TaskStatus.Open).Include(x=>x.TaskUsers))
             {
                 var estimated = Convert.ToInt32(((task.Date - task.CreatedDate) ?? new TimeSpan(0)).TotalDays);
                 if (estimated == 0) estimated = 1;

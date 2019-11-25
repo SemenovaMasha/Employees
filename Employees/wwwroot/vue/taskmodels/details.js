@@ -9,13 +9,24 @@ Vue.component('taskmodeldetails',
             <b-button size="sm" @click="edit()" class="mr-2"  variant="outline-primary">
               <i class="fas fa-edit"></i>
             </b-button>
+            <b-button type="submit" variant="primary" @click="changeStatus()">
+                {{currentItem.status == 0?"Завершить":"Открыть"}}</b-button>
             </h3>
       
           <div class="card-body" >
             <p class="card-title" style="white-space: pre-wrap;">Проект:  <a :href="'/projects/details?id='+currentItem.projectId">{{currentItem.project}} </a></p>
             <h5 class="card-title" style="white-space: pre-wrap;">{{currentItem.taskName}}</h5>
             <p class="card-title" style="white-space: pre-wrap;">{{currentItem.taskDescription}}</p>
-            <p class="card-title" style="white-space: pre-wrap;">Оценочное время: {{currentItem.estimatedTime}}</p>
+            <p class="card-title"  >Оценочное время: {{currentItem.estimatedTime}} <a href="#"  @click="historyToggle()"> <i class="fas fa-history" style="margin-left:10px; color:#48a5e6;"></i></a></p>
+              
+            <slot  style="margin-bottom:20px" v-if="showHistory">      
+
+                <p v-for="item in history">
+                    {{getDateTimeDisplay(item.date)}} Изменил: {{item.user}}, Причина: {{item.reason}}, (Старое значение: {{item.oldValue}}, Новое значение: {{item.newValue}})
+                </p>
+               
+              </slot>
+
             <p class="card-title" style="white-space: pre-wrap;">Дата выполнения: {{dateDisplay}}</p>
             <p class="card-title" style="white-space: pre-wrap;">Дата создания: {{createdDateDisplay}}</p>
 
@@ -60,9 +71,12 @@ Vue.component('taskmodeldetails',
                     createdDate: null,
                     fullDate: null,
                     fullEstimatedTime: 0,
-                    hasChilds:false,
+                    hasChilds: false,
+                    status: 0,
                 },
-                canEdit:false
+                canEdit: false,
+                showHistory: false,
+                history:[]
             }
         },
         computed: {
@@ -83,7 +97,26 @@ Vue.component('taskmodeldetails',
                 return ('0' + date.getDate()).slice(-2) + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + ('000' + (date.getFullYear())).slice(-4)
             },
             edit() {
-                document.location.href = '/taskmodels/edit?id='+this.currentItem.id
+                document.location.href = '/taskmodels/edit?id=' + this.currentItem.id
+            },
+            changeStatus() {
+                axios.get("/taskmodels/changeStatus", {
+                    params: {
+                        id: this.taskmodelid
+                    }
+                })
+                .then(response => {
+                    this.currentItem.status = 1 - this.currentItem.status;
+                })            
+            },
+            historyToggle() {
+                this.showHistory = !this.showHistory;
+            },
+            getDateTimeDisplay(date) {
+                if (!date) return ''
+                var date = new Date(date);
+                return ('0' + date.getDate()).slice(-2) + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + ('000' + (date.getFullYear())).slice(-4) + ' '
+                    + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2)
             },
         },
         mounted() {
@@ -110,10 +143,19 @@ Vue.component('taskmodeldetails',
                     this.currentItem.hasChilds = response.data.hasChilds;
                     this.currentItem.fullEstimatedTime = response.data.fullEstimatedTime;
                     this.currentItem.fullDate = response.data.fullDate;
+                    this.currentItem.status = response.data.status;
 
                     window.document.title = this.currentItem.taskNumber 
                 })
-            
+
+            axios.get("/taskmodels/getEstimateHistory", {
+                params: {
+                    id: this.taskmodelid
+                }
+            })
+                .then(response => {
+                    this.history = response.data
+                })
         }
     });
 

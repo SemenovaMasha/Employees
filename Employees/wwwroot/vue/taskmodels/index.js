@@ -5,14 +5,23 @@ new Vue({
     <div>
        <div style="margin-bottom: 10px" > 
             <div class="form-group row ">
-                <b-button  @click="addTaskmodel()"  variant="success" class="col-sm-2" v-if="isAdmin">
+                <b-button  @click="addTaskmodel()"  variant="success" class="col-sm-2" >
                   <i class="fas fa-plus"> Добавить</i>
                 </b-button>
 
-                <b-form-radio-group  v-model="allTaskmodelsRadio" name="radioAllTaskmodels" @change="changeAllTaskmodels"  class="col-sm-4 offset-sm-1" style="padding-top: 7px;">
-                    <b-form-radio value="mine">Мои задачи</b-form-radio>
-                    <b-form-radio value="all">Все задачи</b-form-radio>
+            </div>
+            <div class="form-group row ">
+                <b-form-radio-group  v-model="allTaskmodelsRadio" name="radioAllTaskmodels"   class="col-sm-12" style="padding-top: 7px;">
+                    <b-form-radio value="Mine">Мои задачи</b-form-radio>
+                    <b-form-radio value="All">Все задачи</b-form-radio>
               </b-form-radio-group>
+                <b-form-radio-group  v-model="allStatusRadio" name="allStatusRadio"   class="col-sm-12" >
+                    <b-form-radio value="Open">В процессе</b-form-radio>
+                    <b-form-radio value="Done">Сделаны</b-form-radio>
+                    <b-form-radio value="All" >Все</b-form-radio>
+                    <b-form-radio value="Over" >Просроченные</b-form-radio>
+              </b-form-radio-group>
+
             </div>
         </div>
 
@@ -29,13 +38,19 @@ new Vue({
            <b-progress>
               <b-progress-bar :max="props.item.progressMax" :value="props.item.progressValue" :variant="progressVariant(props.item.progressValue,props.item.progressMax)" >{{ props.item.progressValue }}/{{ props.item.progressMax }}</b-progress-bar>
             </b-progress>   
-           <b-progress>
+           <b-progress  v-if="props.item.status==0">
               <b-progress-bar :max="props.item.dateProgressMax" :value="props.item.dateProgressValue" :variant="progressVariant(props.item.dateProgressValue,props.item.dateProgressMax)" >{{ props.item.dateProgressValue }}/{{ props.item.dateProgressMax }}</b-progress-bar>
         </b-progress>   
       </template>
 
       <template v-slot:cell(taskNumber)="props">    
        <a :href="'/taskmodels/details?id='+props.item.id">{{props.item.taskNumber}} </a>
+      </template>
+
+      <template v-slot:cell(status)="props">    
+        <i class="fas fa-check-square" title="Сделано" style="color: #56CC9D" v-if="props.item.status==1"></i>
+        <i class="fas fa-clock" title="Просрочено" style="color: #FF7851" v-else-if="props.item.dateProgressValue/props.item.dateProgressMax*100 > 100"></i>
+        <i class="fas fa-clock" title="В процессе" style="color: #ecca7c" v-else></i>
       </template>
       
       <template v-slot:top-row="props">
@@ -74,32 +89,39 @@ new Vue({
     `,
     data: function () {
         return {
-            allTaskmodelsRadio: 'mine',
+            allTaskmodelsRadio: 'Mine',
+            allStatusRadio: 'Open',
             isAdmin: false,
             fields: [
+                {
+                    key: 'status',
+                    label: '',
+                    sortable: true,
+                    width: 1
+                },
                 {
                     key: 'taskNumber',
                     label: 'Номер',
                     sortable: true,
-                    width: 2
+                    width: 4
                 },
                 {
                     key: 'project',
                     label: 'Проект',
                     sortable: true,
-                    width: 4
+                    width: 8
                 },
                 {
                     key: 'taskName',
                     label: 'Название',
                     sortable: true,
-                    width: 4
+                    width: 8
                 },
                 {
                     key: 'priorityName',
                     label: 'Приоритет',
                     sortable: true,
-                    width: 4
+                    width: 8
                 },
                 //{
                 //    key: 'statusName',
@@ -110,7 +132,7 @@ new Vue({
                 {
                     key: 'progress',
                     label: 'Затрачено времени Прошло дней',
-                    width: 3,
+                    width: 6,
                 },
                 {
                     key: 'actions',
@@ -140,45 +162,29 @@ new Vue({
             return filtered.length > 0 ? filtered : []
         }
     },
-
+    watch: {
+        'allTaskmodelsRadio': function (newVal, oldVal) {
+            this.loadData()
+        },
+        'allStatusRadio': function (newVal, oldVal) {
+            this.loadData()
+        },
+    },
     mounted() {
-        //axios.get("/taskmodels/GetAll")
-        //    .then(response => {
-        //        this.allTaskmodels = response.data
-        //    })
+        this.loadData();
 
-        if (this.allTaskmodelsRadio == 'mine') {
-            axios.get("/taskmodels/GetAllMine")
-                .then(response => {
-                    this.allTaskmodels = response.data
-                })
-        } else {
-            axios.get("/taskmodels/GetAll")
-                .then(response => {
-                    this.allTaskmodels = response.data
-                })
-        }
-
-        axios.get("/employees/isAdmin")
-            .then(response => {
-                this.isAdmin = response.data
-                if (!this.isAdmin)
-                    this.fields = this.fields.filter(item => { return item.key != 'actions' && item.key != 'salary' });
-            })
     },
     methods: {
-        changeAllTaskmodels(value) {
-            if (value == 'mine') {
-                axios.get("/taskmodels/GetAllMine")
-                    .then(response => {
-                        this.allTaskmodels = response.data
-                    })
-            } else {
-            axios.get("/taskmodels/GetAll")
-                .then(response => {
-                    this.allTaskmodels = response.data
-                })
-            }
+        loadData() {   
+            axios.get("/taskmodels/getBy", {
+                params: {
+                    byUser: this.allTaskmodelsRadio,
+                    byStatus: this.allStatusRadio
+                }
+            })
+            .then(response => {
+                this.allTaskmodels = response.data
+            })
         },
         deleteTaskmodel(item) {
             this.deletedId = item.id
@@ -209,6 +215,9 @@ new Vue({
             }
 
             return 'danger'
+        },
+        progressValue(value, max) {
+            var div = value / max * 100;
         }
     }
 })

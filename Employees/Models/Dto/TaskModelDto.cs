@@ -35,5 +35,7 @@ namespace Employees.Models.Dto
         public DateTime? FullDate { get; set; }
         public int FullEstimatedTime { get; set; }
         public bool HasChilds { get; set; }
+
+        public string ChangeEstimateReason { get; set; }
     }
 }
