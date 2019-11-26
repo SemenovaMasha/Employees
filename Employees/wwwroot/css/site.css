@@ -116,3 +116,7 @@ header > nav ul.navbar-nav > li > a:hover {
 .progress .progress-bar {
     color: black;
 }
+.b-table-bottom-row td {
+    font-weight: bold;
+    color: #78C2AD;
+}
