@@ -69,9 +69,10 @@
 
         <template slot="bottom-row" slot-scope="data">
             <td/><td/><td/><td>Всего: </td>
-              <td>{{totalElapsed}}</td><td/><td/>
+              <td>{{totalElapsed}}</td><td/>
+                <td v-if="fields.length==7"/>
         </template>
-
+      
     <template v-slot:row-details="row">
 
             <div class="card mb-3">
@@ -414,7 +415,8 @@
                     .then(response => {
                         this.isManager = response.data
                         if (!this.isManager && !this.isAdmin)
-                            this.fields = this.fields.filter(item => { return  item.key != 'user' });
+                            this.fields = this.fields.filter(item => { return item.key != 'user' });
+                        console.log(this.fields.length)
                     })
             })
 
