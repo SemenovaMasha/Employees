@@ -7,6 +7,7 @@ namespace Employees.Models.Dto
 {
     public class LaborsGroupByUser
     {
+        public string Id { get; set; }
         public string Fio { get; set; }
         public int ElapsedSum { get; set; }
     }

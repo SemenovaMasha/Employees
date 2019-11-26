@@ -82,6 +82,7 @@ namespace Employees.Services
                  })
                   .Select(x => new LaborsGroupByUser()
                   {
+                      Id = x.Key.UserId,
                       Fio = x.Key.Fio,
                       ElapsedSum = x.Sum(y => y.ElapsedTime)
                   }).ToList();
