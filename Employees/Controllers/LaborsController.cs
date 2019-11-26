@@ -55,6 +55,11 @@ namespace Employees.Controllers
             return _laborsService.GetAllByUser(CurrentUser.Id, startDate, endDate);
         }
 
+        public List<LaborsGroupByUser> GetByProject( long projectId,DateTime? startDate = null, DateTime? endDate = null)
+        {
+            return _laborsService.GetByProject(projectId, startDate, endDate);
+        }
+
         public List<LaborDto> GetAllMyProjects(DateTime? startDate = null, DateTime? endDate = null)
         {
             return _laborsService.GetAllMyProjects(CurrentUser.Id, startDate, endDate);

@@ -67,6 +67,11 @@
         </b-button>
       </template>
 
+        <template slot="bottom-row" slot-scope="data">
+            <td/><td/><td/><td>Всего: </td>
+              <td>{{totalElapsed}}</td><td/><td/>
+        </template>
+
     <template v-slot:row-details="row">
 
             <div class="card mb-3">
@@ -390,6 +395,10 @@
                     String(item[key]).toLowerCase().includes(this.filters[key].toLowerCase()))
             })
             return filtered.length > 0 ? filtered : []
+        },
+        totalElapsed() {
+            var t = this.filtered;
+            return t.reduce((a, b) => a + (b['elapsedTime'] || 0), 0);
         },
         taskNumberFilled() {
             return this.currentItem.taskNumber && $.trim(this.currentItem.taskNumber)

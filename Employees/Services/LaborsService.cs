@@ -72,6 +72,21 @@ namespace Employees.Services
             };
         }
 
+        internal List<LaborsGroupByUser> GetByProject(long projectId, DateTime? startDate, DateTime? endDate)
+        {
+            return _context.Labors.Include(x => x.User).Where(x => x.ProjectId == projectId && (startDate != null ? x.Date >= startDate : true) && (endDate != null ? x.Date <= endDate : true))
+                 .GroupBy(x => new
+                 {
+                     UserId = x.UserId,
+                     Fio = x.User.FIO,
+                 })
+                  .Select(x => new LaborsGroupByUser()
+                  {
+                      Fio = x.Key.Fio,
+                      ElapsedSum = x.Sum(y => y.ElapsedTime)
+                  }).ToList();
+        }
+
         public List<LaborDto> GetAllByUser(string id, DateTime? startDate = null, DateTime? endDate = null)
         {
             return _context.Labors
