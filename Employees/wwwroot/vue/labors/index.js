@@ -347,7 +347,7 @@
                 if (this.currentItem.taskmodel && this.currentItem.taskmodel.id) {
                     axios.get("/taskModels/get?id=" + this.currentItem.taskmodel.id)
                         .then(response => {
-                            this.allUsers = response.data
+                            //this.allUsers = response.data
                             this.currentItem.taskNumber = response.data.taskNumber;
                             this.currentItem.taskName = response.data.taskName;
 
