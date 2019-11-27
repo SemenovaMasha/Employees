@@ -7,7 +7,7 @@
 
              <div class="card-body">
                 <div style="margin-bottom: 10px"  v-if="canEdit">       
-                <b-button  @click="addEmployeeToTeam()"  variant="success" >
+                <b-button  @click="addEmployeeToTeam()"  variant="success"  v-if="isManager">
                   <i class="fas fa-plus"> Добавить участника</i>
                 </b-button>
                 </div>
@@ -19,7 +19,7 @@
                   </template>
 
                   <template v-slot:cell(actions)="props"> 
-                    <b-button size="sm"  @click="removeFromProject(props.item, props.index, $event.target)" class="mr-2"  variant="outline-danger" 
+                    <b-button size="sm"  @click="removeFromProject(props.item, props.index, $event.target)" class="mr-2"  variant="outline-danger"  
                         v-if="!props.item.isProjectManager">
                       <i class="fas fa-trash-alt"></i>
                     </b-button>
@@ -180,7 +180,8 @@
                 position: '',
                 role: '',
             },
-            deletedId: -1
+            deletedId: -1,
+            isManager: false,
         }
     },
     computed: {
@@ -247,6 +248,10 @@
     },
 
     mounted() {
+        axios.get("/employees/isManager")
+            .then(response => {
+                this.isManager = response.data
+            })
         axios.get("/projects/GetProjectUsers" ,{
                 params: {
                     id: this.projectid

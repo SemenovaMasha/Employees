@@ -406,6 +406,8 @@ namespace Employees.Services
             }
 
             TaskModel TaskModel = _context.TaskModels.FirstOrDefault(x => x.Id == Id);
+
+            _context.RemoveRange(_context.Labors.Where(x=>x.TaskModelId==Id));
             _context.TaskModels.Remove(TaskModel);
         }
 
